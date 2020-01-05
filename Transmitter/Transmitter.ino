@@ -26,12 +26,19 @@ char _longitude[16];
 char temp[16];
 char _packet[64];
 
+void check_gps_connected();
+void gps_read_info();
 void get_info();
-void create_packet();
+void send_info();
+void create_info_packet();
+void create_button_packet();
 void calculate_iterations();
+void button_interrupt();
+void check_button();
 
 void setup() {
   Serial.begin(9600);
+  gpsSerial.begin(9600);
   while (!Serial);
 
   LoRa.setPins(10, 7, 2);
@@ -42,24 +49,27 @@ void setup() {
   }
 
   calculate_iterations();
-  gpsSerial.begin(9600);
+
+  pinMode(A0, INPUT_PULLUP);
 }
 
 void loop() {
-  while (gpsSerial.available() > 0) {
-    if (gps.encode(gpsSerial.read())) {
-      get_info();
-      read_data_count++;
-    }
-  }
+  gps_read_info();
+  check_gps_connected();
+  send_info();
+  check_button();
+}
 
+void check_gps_connected() {
   if (millis() > 5000 && gps.charsProcessed() < 10) {
     Serial.println("No GPS detected");
     while (true) { }
   }
+}
 
+void send_info() {
   if (read_data_count == 40) {
-    create_packet();
+    create_info_packet();
     Serial.println(_packet);
     LoRa.beginPacket();
     LoRa.print(_packet);
@@ -89,10 +99,42 @@ void get_info() {
   }
 }
 
-void create_packet() {
+void gps_read_info() {
+  while (gpsSerial.available() > 0) {
+    if (gps.encode(gpsSerial.read())) {
+      get_info();
+      read_data_count++;
+    }
+  }
+}
+
+void create_info_packet() {
   sprintf(_packet, "%s, %s, %d/%d/%d, %d:%d:%d", _latitude, _longitude, _day, _month, _year, _hour, _minute, _second);
+}
+
+void create_button_packet() {
+  sprintf(_packet, "button, %d/%d/%d, %d:%d:%d", _day, _month, _year, _hour, _minute, _second);
 }
 
 void calculate_iterations() {
   iterations = INTERVAL * 8;
+}
+
+void check_button() {
+  if (!digitalRead(A0)) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+
+    if (interrupt_time - last_interrupt_time > 200) {
+      if (!digitalRead(A0)) {
+        create_button_packet();
+        Serial.println(_packet);
+        LoRa.beginPacket();
+        LoRa.print(_packet);
+        LoRa.endPacket();
+      }
+    }
+    
+    last_interrupt_time = interrupt_time;
+  }
 }
