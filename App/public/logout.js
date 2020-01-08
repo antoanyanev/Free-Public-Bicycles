@@ -1,7 +1,7 @@
 $(document).ready(function() {
-    $('#home').attr('href', extractbase() + '/home');
-    $('#map').attr('href', extractbase() + '/map');
-    $('#profile').attr('href', extractbase() + '/profile');
+    $('#home').attr('href', extractBase() + '/home');
+    $('#map').attr('href', extractBase() + '/map');
+    $('#profile').attr('href', extractBase() + '/profile');
     
     $('#logout').click(function() {
         let url = window.location.href;
@@ -14,7 +14,7 @@ $(document).ready(function() {
     });
 });
 
-function extractbase() {
+function extractBase() {
     let url = window.location.href;
     let base = url.substring(0, url.lastIndexOf('/'));
     return base;
