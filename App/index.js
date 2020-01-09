@@ -7,6 +7,8 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
+const https = require('https');
+const fs = require('fs');
 
 var connection = mysql.createConnection({
 	host     : 'localhost',
@@ -149,7 +151,7 @@ app.get('/bicycles/get/all', (req, res) => {
 });
 
 app.get('/bicycles/get/free', (req, res) => {
-    connection.query('SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0', (error, results, fields) => {        
+    connection.query('SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0 AND y.battery > 30', (error, results, fields) => {        
         if (error) throw error;
 
         if (results.length > 0) {
@@ -227,4 +229,11 @@ app.post('/bicycles/rent', (req, res) => {
     res.end();
 });
 
-app.listen(9000);
+https.createServer({
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert')
+}, app).listen(443, () => {
+    console.log('Listening...');
+})
+
+//app.listen(80);

@@ -1,14 +1,14 @@
-$(document).ready(function() {
+$(document).ready(() => {
     $('#home').attr('href', extractBase() + '/home');
     $('#map').attr('href', extractBase() + '/map');
     $('#profile').attr('href', extractBase() + '/profile');
     
-    $('#logout').click(function() {
+    $('#logout').click(() => {
         let url = window.location.href;
         let base = url.substring(0, url.lastIndexOf('/'));
         url = base + '/logout';
 
-        $.get(url, function(data) {
+        $.get(url, (data) => {
             window.location.href = base + '/login';
          });
     });
