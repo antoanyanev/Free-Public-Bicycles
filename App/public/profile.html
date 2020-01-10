@@ -5,7 +5,8 @@
 		<title>Profile</title>
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-        <script src="logout.js"></script>
+		<script src="logout.js"></script>
+		<script src="profile.js"></script>
     </head>
 	<body>
 		<nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -16,13 +17,13 @@
 			<div class="collapse navbar-collapse" id="navbarNav">
 			  <ul class="navbar-nav">
 				<li class="nav-item">
-				  <a class="nav-link" href="home.html">Home</a>
+				  <a class="nav-link" id="home" href="">Home</a>
 				</li>
 				<li class="nav-item">
-				  <a class="nav-link" href="map.html">Map</a>
+				  <a class="nav-link" id="map" href="">Map</a>
 				</li>
 				<li class="nav-item active">
-				  <a class="nav-link" href="profile.html">Profile <span class="sr-only">(current)</span></a> 
+				  <a class="nav-link" id="profile" href="">Profile <span class="sr-only">(current)</span></a> 
 				</li>
 				<li class="nav-item" id="logout">
 					<a class="nav-link" href="">Logout</a>
@@ -30,5 +31,7 @@
 			  </ul>
 			</div>
 		  </nav>
+
+		  <div id="bicycleLetGo"></div>
 	</body>
 </html>

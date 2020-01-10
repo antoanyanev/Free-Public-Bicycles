@@ -27,8 +27,8 @@ function updateMarkers() { // GETs free bicycles' data and creates new markerss
     $.get(extractBase() + '/bicycles/get/free', function(data) { // Make a GET request for all free bicycles' data
         for (let i = 0; i < data.length; i++) {
             coords.push({ // Append a data object for each bicycle into coords
-                lat: data[i].longitude, // Latitude
-                lng: data[i].latitude, // Longitude
+                lat: data[i].latitude, // Latitude
+                lng: data[i].longitude, // Longitude
                 bicycle_id: data[i].bicycle_id, // Bicycle ID
                 gateway_id: data[i].gateway_id, // gateway ID
                 battery: data[i].battery // Battery Level
@@ -46,8 +46,8 @@ function extractBase() { // Extract the base URL
 }
 
 function createMarkers() { // Create markers objects based on coords data
-    let address; // Stores the address of each bicycle
     let icon; // Store the icon url of each bicycle
+    let infoWindow = new google.maps.InfoWindow();
 
     for (let i = 0; i < coords.length; i++) { // Choose an icon for each marker
         let battery = coords[i].battery;
@@ -62,22 +62,14 @@ function createMarkers() { // Create markers objects based on coords data
         marker.setIcon(icon); // Change default icon
         markers.push(marker); // Append marker object to markers array
 
-        // Make a GET request to Google Geocoding API
-        $.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords[i].lat},${coords[i].lng}&key=AIzaSyDZ0puiDWzf9zJOZVaNtg6chU6P6c_XeUY`, (data) => {
-            address = data.results[0].formatted_address; // Extact address of each bicycle from GET response
-        }).then(() => {
-            let infoWindow = new google.maps.InfoWindow({ // Create a pop up window for each marker
-                //content: "bateriq, adres, kopche za naemane"
-                content: "<div>" + "Address: " + address + // Set HTML content of pop up
-                         "<br> Battery: " + battery + "%" +
-                         "<br> Bicycle ID: " + coords[i].bicycle_id +
-                         "<br> Gateway ID: " + coords[i].gateway_id + 
-                         "<br> <input type='submit' value='Rent' onclick='rentBicycle()'></div>" // Assign a callback function to rent button
-            });
-
-            google.maps.event.addListener(markers[i], 'click', () => { // Bind event listener for click on each marker
-                infoWindow.open(map, markers[i]);  // Open pop up
-            });
+        google.maps.event.addListener(markers[i], 'click', () => { // Bind event listener for click on each marker
+            infoWindow.setContent('<div><p id="marker">' + // Set HTML content of pop up
+                        "Battery: " + battery + "%" +
+                        "<br> Bicycle ID: " + coords[i].bicycle_id +
+                        "<br> Gateway ID: " + coords[i].gateway_id + 
+                        "<br> <input type='submit' value='Rent' onclick='rentBicycle()'></p></div>" // Assign a callback function to rent button
+            );
+            infoWindow.open(map, markers[i]);  // Open pop up
         });
     }
 }
@@ -186,4 +178,16 @@ function refreshMarkers() { // Create custom map buttons
         markers.length = new Array(); // Initialize markers array
         updateMarkers(); // Update markers
     }, markerRefreshInterval);
+}
+
+function rentBicycle() {
+    let content = $("#marker").text();
+    let bicycleIDIndex = content.indexOf('Bicycle');
+    let gatewayIDIndex = content.indexOf('Gateway');
+    let bicycleID = parseInt(content.substring(bicycleIDIndex, gatewayIDIndex).split(':')[1].trim());
+    let gatewayID = parseInt(content.substring(gatewayIDIndex).split(':')[1].trim());
+
+    $.post(extractBase() + '/bicycles/update', {bicycle_id: bicycleID, gateway_id: gatewayID} , (data) => {
+        console.log(data);
+    });
 }
