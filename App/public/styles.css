@@ -1,3 +1,9 @@
-.navbar navbar-expand-lg navbar-light bg-light {
-    background-color: lightslategray;
+.navbar-custom {
+    background-color: #28313e;
+    color: #ffffff;
 }
+
+.navbar-custom .navbar-brand, 
+.navbar-custom .navbar-text { 
+    color: green; 
+} 

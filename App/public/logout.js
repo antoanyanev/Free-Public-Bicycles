@@ -5,12 +5,8 @@ $(document).ready(() => {
     $('#profile').attr('href', 'https://www.freepublicbicycles.org/profile');
     
     $('#logout').click(() => {
-        let url = window.location.href;
-        let base = url.substring(0, url.lastIndexOf('/'));
-        url = base + '/logout';
-
-        $.get(url, (data) => {
-            window.location.href = base + '/login';
+        $.get('https://www.freepublicbicycles.org/logout', (data) => {
+            window.location.href = 'https://www.freepublicbicycles.org/login';
          });
     });
 });

@@ -76,6 +76,7 @@ app.post('/auth', (req, res) => { // Check users loin credentials
             if (results.length > 0) { //
                 req.session.loggedin = true; // Begin new session
                 req.session.username = username;
+                req.session.userID = parseInt(results[0].id);
                 req.session.bicycle_id = null;
                 req.session.gateway_id = null;
                 req.session.status = 0;
@@ -113,11 +114,16 @@ app.post('/register', (req, res) => { // Register new user
             if (error) throw error;
             req.session.loggedin = true; // Begin a session for the new user
             req.session.username = username;
+            req.session.email = email;
             req.session.bicycle_id = null;
             req.session.gateway_id = null;
             req.session.status = 0;
             res.redirect('/home'); // Redirect user to the homepage
             res.end(); // Send response
+        });
+
+        connection.query('SELECT * FROM accounts WHERE username = ?', username, (error, results, fields) => {
+            req.session.userID = parseInt(results[0].id);
         });
     }
 });
@@ -189,15 +195,14 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
             connection.query('UPDATE bicycles SET status = 1 WHERE bicycle_id = ?', bicycle.bicycle_id, (error, results) => {
                 if (error) throw eror;
             });
-            
+
             found = true;
             break;
         }
     }
 
-    if (found) { // Check if the requested bicycle's status has been update
-        // Create response
-        let response = {
+    if (found) { // Check if the requested bicycle's status has been updated
+        let response = {  // Create response
             bicycle_id: bicycle_id,
             gateway_id: gateway_id,
             status: true
@@ -260,12 +265,37 @@ app.get('/user/status', (req, res) => {
 });
 
 app.post('/bicycles/letgo', (req, res) => {
+    let username = req.session.username;
+    let email = req.session.email;
+    let password = req.session.password;
+    let id = req.session.userID;
+    let biggestTripId = 1;
+
+    req.session.bicycle_id = null;
+    req.session.gateway_id = null;
+    req.session.status = 0;
+
     connection.query('UPDATE bicycles SET status = 0 WHERE bicycle_id = ?', req.body.bicycle_id, (error, results) => {
         if (error) throw error;
+    });
 
-        req.session.bicycle_id = null;
-        req.session.gateway_id = null;
-        req.session.status = 0;
+    connection.query('SELECT a.id, t.tripID FROM accounts as a INNER JOIN accountToTrip as t ON a.id = t.accountID WHERE a.username = ?', username, (error, results, fields) => {
+        if (error) throw error;
+        if (results.length > 0) {
+            biggestTripId = parseInt(results[0].tripID);
+
+            results.forEach(r => {
+                if (parseInt(r.tripID) > biggestTripId) {
+                    biggestTripId = parseInt(r.tripID);
+                }
+            });
+
+            biggestTripId++;
+        }
+    });
+
+    connection.query(`INSERT INTO accountToTrip (accountID, tripID) VALUES(?, ?)`, [id, biggestTripId], (error, results) => {
+        if (error) throw error;
     });
 
     res.end();
