@@ -13,9 +13,13 @@ $(document).ready(() =>{
         }
     });
 
-    $.get('https://www.freepublicbicycle.org/user/trips/all', (data) => {
-        for (let i = 0; i < data.count; i++) {
-            
+    $.get('https://www.freepublicbicycles.org/user/trips/all', (data) => {
+        let id = 0;
+        for (let i = 0; i < data.length; i++) {
+            if (id != data[i].id) {
+                $("#trips").append(`<li>Trip Number: ${data[i].id}</li>`);
+                id = data[i].id;
+            }
         }
     });
 });
@@ -23,5 +27,6 @@ $(document).ready(() =>{
 function bicycleLetGo() {
     $.post('https://www.freepublicbicycles.org/bicycles/letgo', {bicycle_id: bicycleID, gateway_id: gatewayID}, (data) => {
         $("#letgo").remove();
+        location.reload();
     });
 }

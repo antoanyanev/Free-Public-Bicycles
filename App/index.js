@@ -68,12 +68,13 @@ app.post('/auth', (req, res) => { // Check users loin credentials
     // Acquire request parameters
     let username = req.body.username;
     let password = req.body.password;
+    let sql = 'SELECT * FROM accounts WHERE username = ? AND password = ?';
 
     // Check if all parameters have been sent
     if (username && password) {
         // Look up user in DB
-        connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], (error, results, fields) => {
-            if (results.length > 0) { //
+        query(sql, [username, password]).then((results) => {
+            if (results.length > 0) {
                 req.session.loggedin = true; // Begin new session
                 req.session.username = username;
                 req.session.userID = parseInt(results[0].id);
@@ -106,12 +107,13 @@ app.post('/register', (req, res) => { // Register new user
     let username = req.body.username;
     let email = req.body.email;
     let password = req.body.password;
+    let sql;
 
     // Check if all parameters have been sent
     if (username && email && password) {
         // Insert new user into DB
-        connection.query('INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)', [username, password, email], (error, results) => {
-            if (error) throw error;
+        sql = 'INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)';
+        query(sql, [username, password, email]).then((results) => {
             req.session.loggedin = true; // Begin a session for the new user
             req.session.username = username;
             req.session.email = email;
@@ -122,7 +124,8 @@ app.post('/register', (req, res) => { // Register new user
             res.end(); // Send response
         });
 
-        connection.query('SELECT * FROM accounts WHERE username = ?', username, (error, results, fields) => {
+        sql = 'SELECT * FROM accounts WHERE username = ?';
+        query(sql, [username]).then((results) => {
             req.session.userID = parseInt(results[0].id);
         });
     }
@@ -145,36 +148,33 @@ app.put('/locations/add', (req, res) => { // Register a bicycle location in DB
     let longitude = parseFloat(req.body.longitude);
     let latitude = parseFloat(req.body.latitude);
     let timestamp = req.body.timestamp;
+    let sql = 'INSERT INTO locations (bicycle_id, gateway_id, longitude, latitude, timestamp) VALUES(?, ?, ?, ?, ?)';
 
     // Check if all parameters have been sent
     if (bicycle_id && gateway_id && longitude && latitude && timestamp) {
         // Insert paramters into DB
-        connection.query('INSERT INTO locations (bicycle_id, gateway_id, longitude, latitude, timestamp) VALUES(?, ?, ?, ?, ?)', [bicycle_id, gateway_id, longitude, latitude, timestamp], (error, results) => {
-            if (error) throw error;
-            res.end(); // Send response
+
+        query(sql, [bicycle_id, gateway_id, longitude, latitude, timestamp]).then((results) => {
+            res.end();
         });
     }
 });
 
 app.get('/bicycles/get/all', (req, res) => { // Return a list of all bicycles
     // Get all bicycles from DB
-    connection.query('SELECT * FROM locations', (error, results, fields) => {
-        if (error) throw error;
-
-        if (results.length > 0) {        
-            res.send(results); // Send JSON response
-        }
+    let sql = 'SELECT * FROM locations';
+    query(sql, []).then((results) => {
+        if (results.length > 0)
+            res.send(results);
     });
 });
 
 app.get('/bicycles/get/free', (req, res) => { // Return list of available free bicycles
     // Get all free bicycles from DB
-    connection.query('SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0 AND y.battery > 30', (error, results, fields) => {        
-        if (error) throw error;
-
-        if (results.length > 0) {
-            res.send(results); // Send JSON as response
-        }
+    let sql = 'SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0 AND y.battery > 30';
+    query(sql, []).then((results) => {
+        if (results.length > 0) 
+            res.send(results);
     });
 });
 
@@ -183,6 +183,7 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
     let bicycle_id = parseInt(req.body.bicycle_id);
     let gateway_id = parseInt(req.body.gateway_id);
     let found = false;
+    let sql;
 
     // Check all bicycles with pending status
     for (let i = 0; i < pendingBicycles.length; i++) {
@@ -192,9 +193,8 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
             timeouts.splice(i, 1); // Remove bicycle from timeouts list
 
             // Change status of bicycle to occupied
-            connection.query('UPDATE bicycles SET status = 1 WHERE bicycle_id = ?', bicycle.bicycle_id, (error, results) => {
-                if (error) throw eror;
-            });
+            sql = 'UPDATE bicycles SET status = 1 WHERE bicycle_id = ?';
+            query(sql, bicycle.bicycle_id).then((results) => { });
 
             found = true;
             break;
@@ -209,8 +209,10 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
         };
 
         req.session.bicycle_id = bicycle_id;
+        console.log(req.session.bicycle_id);
         req.session.gateway_id = gateway_id;
         req.session.status = true;
+        req.session.timestamp = (new Date()).toISOString().slice(0, 19).replace(/-/g, "/").replace("T", " ");
         res.send(response); // Send JSON response
     } else {
         res.send("Invalid request"); // Send invalid request aknowledgement
@@ -265,40 +267,60 @@ app.get('/user/status', (req, res) => {
 });
 
 app.post('/bicycles/letgo', (req, res) => {
+    let sql;
     let username = req.session.username;
     let email = req.session.email;
     let password = req.session.password;
     let id = req.session.userID;
-    let biggestTripId = 1;
+    let timestamp = req.session.timestamp;
+    let biggestTripId = 0;
+    let bicycle_id = req.session.bicycle_id;
+    let values = [];
+
+    sql = 'UPDATE bicycles SET status = 0 WHERE bicycle_id = ?';
+    query(sql, [req.body.bicycle_id]).then((results) => {
+
+    });
+
+    sql = 'SELECT a.id, t.tripID FROM accounts as a INNER JOIN accountToTrip as t ON a.id = t.accountID WHERE a.username = ?'
+    query(sql, [username]).then((results) => {
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].tripID > biggestTripId) {
+                biggestTripId = results[i].tripID;
+            }
+        }
+
+        biggestTripId++;
+        sql = `INSERT INTO accountToTrip (accountID, tripID) VALUES (?, ?)`;
+        query(sql, [id, biggestTripId]).then((resuts) => {
+            sql = 'SELECT locations.id, locations.bicycle_id FROM locations WHERE timestamp > ? ORDER BY bicycle_id, timestamp';
+            query(sql, [req.session.timestamp]).then((results) => {
+                for (let i = 0; i < results.length; i++) {
+                    if (bicycle_id == results[i].bicycle_id) {
+                        values.push([biggestTripId, results[i].id, id, bicycle_id]);
+                    }
+                }
+
+                sql = 'INSERT INTO trips (id, locationID, userID, bicycle_id) VALUES ?';
+                query(sql, [values]).then((results) => {
+
+                });
+            });
+        });
+    });
 
     req.session.bicycle_id = null;
     req.session.gateway_id = null;
     req.session.status = 0;
 
-    connection.query('UPDATE bicycles SET status = 0 WHERE bicycle_id = ?', req.body.bicycle_id, (error, results) => {
-        if (error) throw error;
-    });
-
-    connection.query('SELECT a.id, t.tripID FROM accounts as a INNER JOIN accountToTrip as t ON a.id = t.accountID WHERE a.username = ?', username, (error, results, fields) => {
-        if (error) throw error;
-        if (results.length > 0) {
-            biggestTripId = parseInt(results[0].tripID);
-
-            results.forEach(r => {
-                if (parseInt(r.tripID) > biggestTripId) {
-                    biggestTripId = parseInt(r.tripID);
-                }
-            });
-
-            biggestTripId++;
-        }
-    });
-
-    connection.query(`INSERT INTO accountToTrip (accountID, tripID) VALUES(?, ?)`, [id, biggestTripId], (error, results) => {
-        if (error) throw error;
-    });
-
     res.end();
+});
+
+app.get('/user/trips/all', (req, res) => {
+    let sql = 'SELECT * FROM trips WHERE userID = ?';
+    query(sql, [req.session.userID]).then((results) => {
+        res.send(results);
+    });
 });
 
 https.createServer({ // Create HTTPS server 
@@ -307,3 +329,14 @@ https.createServer({ // Create HTTPS server
 }, app).listen(443, () => { // Set app to listen ot port 443 for HTTPS
     console.log('Listening...');
 });
+
+function query(sql, args) {
+    return new Promise((resolve, reject) => {
+        connection.query(sql, args, (error, results) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(results);
+        });
+    });
+}

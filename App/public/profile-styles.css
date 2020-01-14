@@ -9,3 +9,20 @@ button {
     font-weight: bold;
     color: #ffffff;
 }
+
+#tripsList {
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+}
+
+li {
+    list-style-type: none;
+    text-align: center;
+}
+
+#bicycleLetGo {
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+}
