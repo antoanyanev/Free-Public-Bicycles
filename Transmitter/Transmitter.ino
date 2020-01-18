@@ -68,7 +68,7 @@ void check_gps_connected() {
 }
 
 void send_info() {
-  if (read_data_count == 40) {
+  if (read_data_count == 8 * 60 * 5) {
     create_info_packet();
     Serial.println(_packet);
     LoRa.beginPacket();
