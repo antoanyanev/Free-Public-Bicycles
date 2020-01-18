@@ -11,9 +11,11 @@ button {
 }
 
 #tripsList {
-    width: 100%;
-    text-align: center;
+    width: 400px;
+    float: left;
     text-decoration: none;
+    padding: 5%;
+    text-align: center;
 }
 
 li {
@@ -25,4 +27,14 @@ li {
     width: 100%;
     text-align: center;
     text-decoration: none;
+}
+
+#map {
+    float: right;
+    width: 1400px;
+    height: 890px;
+}
+
+body {
+    overflow: hidden;
 }

@@ -32,6 +32,10 @@ app.use(bodyParser.urlencoded({extended : true})); // Enable parser to work with
 app.use(bodyParser.json()); // Enable body parser to work with JSON format
 app.use(express.static('public')); // Set a folder with static files for routing
 
+app.get('/', (req, res) => {
+    res.redirect('/home');
+})
+
 app.get('/home', (req, res) => { // Redirect user to home page
     if (req.session.loggedin) { // Check for existing connection
         res.sendFile(path.join(__dirname + '/public/home.html')); // Redirect to home page

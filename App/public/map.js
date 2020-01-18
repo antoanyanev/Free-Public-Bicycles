@@ -15,86 +15,86 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), { // Create map object
         center: {lat: 42.7254843, lng: 23.3056195}, // Set center point coordinates
         zoom: 16, // Set the initial zoom level of the map
-        styles : [
-            {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
-            {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
-            {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
-            {
-              featureType: 'administrative.locality',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'poi',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'poi.park',
-              elementType: 'geometry',
-              stylers: [{color: '#263c3f'}]
-            },
-            {
-              featureType: 'poi.park',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#6b9a76'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'geometry',
-              stylers: [{color: '#38414e'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'geometry.stroke',
-              stylers: [{color: '#212a37'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#9ca5b3'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'geometry',
-              stylers: [{color: '#746855'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'geometry.stroke',
-              stylers: [{color: '#1f2835'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#f3d19c'}]
-            },
-            {
-              featureType: 'transit',
-              elementType: 'geometry',
-              stylers: [{color: '#2f3948'}]
-            },
-            {
-              featureType: 'transit.station',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'geometry',
-              stylers: [{color: '#17263c'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#515c6d'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'labels.text.stroke',
-              stylers: [{color: '#17263c'}]
-            }
-          ]        
+        styles: [
+          {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+          {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+          {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+          {
+            featureType: 'administrative.locality',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'poi',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'poi.park',
+            elementType: 'geometry',
+            stylers: [{color: '#263c3f'}]
+          },
+          {
+            featureType: 'poi.park',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#6b9a76'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'geometry',
+            stylers: [{color: '#38414e'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'geometry.stroke',
+            stylers: [{color: '#212a37'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#9ca5b3'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'geometry',
+            stylers: [{color: '#746855'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'geometry.stroke',
+            stylers: [{color: '#1f2835'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#f3d19c'}]
+          },
+          {
+            featureType: 'transit',
+            elementType: 'geometry',
+            stylers: [{color: '#2f3948'}]
+          },
+          {
+            featureType: 'transit.station',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'geometry',
+            stylers: [{color: '#17263c'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#515c6d'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'labels.text.stroke',
+            stylers: [{color: '#17263c'}]
+          }
+        ]
     });
 
     createButtons(); // Create custom map buttons
@@ -104,7 +104,7 @@ function initMap() {
 }
 
 function updateMarkers() { // GETs free bicycles' data and creates new markerss
-    $.get(extractBase() + '/bicycles/get/free', function(data) { // Make a GET request for all free bicycles' data
+    $.get('https://www.freepublicbicycles.org/bicycles/get/free', function(data) { // Make a GET request for all free bicycles' data
         for (let i = 0; i < data.length; i++) {
             coords.push({ // Append a data object for each bicycle into coords
                 lat: data[i].latitude, // Latitude
@@ -117,12 +117,6 @@ function updateMarkers() { // GETs free bicycles' data and creates new markerss
     }).then(() => { 
         createMarkers(); // Create markers based on data inserted into coords
     });
-}
-
-function extractBase() { // Extract the base URL
-    let url = window.location.href; // Get current URL
-    let base = url.substring(0, url.lastIndexOf('/')); // Substring the domain
-    return base;
 }
 
 function createMarkers() { // Create markers objects based on coords data
@@ -268,7 +262,7 @@ function rentBicycle() {
     let bicycleID = parseInt(content.substring(bicycleIDIndex, gatewayIDIndex).split(':')[1].trim());
     let gatewayID = parseInt(content.substring(gatewayIDIndex).split(':')[1].trim());
 
-    $.post(extractBase() + '/bicycles/update', {bicycle_id: bicycleID, gateway_id: gatewayID} , (data) => {
+    $.post('https://www.freepublicbicycles.org/bicycles/update', {bicycle_id: bicycleID, gateway_id: gatewayID} , (data) => {
         console.log(data);
     });
 }
