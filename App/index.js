@@ -5,7 +5,8 @@ const bodyParser = require('body-parser'); // Require body parser to parse reque
 const path = require('path'); // Require path to mange directories
 const app = express(); // Create express app
 const https = require('https'); // Require https to create a secureconnection
-const fs = require('fs'); // Require filestream to read files
+const fs = require('fs'); // Require filestream to read 
+const passwordHash = require('password-hash');
 
 let pendingBicycles = []; // List of pending rents
 let timeouts = []; // List of timeout objects for renting
@@ -68,29 +69,38 @@ app.get('/login', (req, res) => { // Redirect user to login page
     }  
 });
 
-app.post('/auth', (req, res) => { // Check users loin credentials
+app.post('/auth', (req, res) => { // Check users log in credentials
     // Acquire request parameters
     let username = req.body.username;
     let password = req.body.password;
-    let sql = 'SELECT * FROM accounts WHERE username = ? AND password = ?';
+    let hashedPassword;
+    let sql;
 
     // Check if all parameters have been sent
     if (username && password) {
-        // Look up user in DB
-        query(sql, [username, password]).then((results) => {
-            if (results.length > 0) {
-                req.session.loggedin = true; // Begin new session
-                req.session.username = username;
-                req.session.userID = parseInt(results[0].id);
-                req.session.bicycle_id = null;
-                req.session.gateway_id = null;
-                req.session.status = 0;
-                res.redirect('/home'); // redirect user to home page
-            } else {
-                res.send('Incorrect Username and/or Password!'); // Send acknowledgement for incorrent log in credentials
-            }
+        sql = 'SELECT * FROM accounts WHERE username = ?';
+        query(sql, [username]).then((results) => {
+            hashedPassword = results[0].password;
 
-            res.end();
+            if (passwordHash.verify(password, hashedPassword)) {
+                // Look up user in DB
+                sql = 'SELECT * FROM accounts WHERE username = ? AND password = ?';
+                query(sql, [username, hashedPassword]).then((results) => {
+                if (results.length > 0) {
+                    req.session.loggedin = true; // Begin new session
+                    req.session.username = username;
+                    req.session.userID = parseInt(results[0].id);
+                    req.session.bicycle_id = null;
+                    req.session.gateway_id = null;
+                    req.session.status = 0;
+                    res.redirect('/home'); // redirect user to home page
+                } else {
+                    res.send('Incorrect Username and/or Password!'); // Send acknowledgement for incorrent log in credentials
+                }
+    
+                res.end();
+            });   
+            }
         });
     } else {
         res.send('Please enter Username and Password!');
@@ -116,8 +126,9 @@ app.post('/register', (req, res) => { // Register new user
     // Check if all parameters have been sent
     if (username && email && password) {
         // Insert new user into DB
+        let hashedPassword = passwordHash.generate(password);
         sql = 'INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)';
-        query(sql, [username, password, email]).then((results) => {
+        query(sql, [username, hashedPassword, email]).then((results) => {
             req.session.loggedin = true; // Begin a session for the new user
             req.session.username = username;
             req.session.email = email;
@@ -152,14 +163,24 @@ app.put('/locations/add', (req, res) => { // Register a bicycle location in DB
     let longitude = parseFloat(req.body.longitude);
     let latitude = parseFloat(req.body.latitude);
     let timestamp = req.body.timestamp;
-    let sql = 'INSERT INTO locations (bicycle_id, gateway_id, longitude, latitude, timestamp) VALUES(?, ?, ?, ?, ?)';
+    let battery = parseInt(req.body.battery);
+    let sql;
 
     // Check if all parameters have been sent
     if (bicycle_id && gateway_id && longitude && latitude && timestamp) {
         // Insert paramters into DB
 
-        query(sql, [bicycle_id, gateway_id, longitude, latitude, timestamp]).then((results) => {
-            res.end();
+        sql = 'SELECT bicycles.bicycle_id FROM bicycles WHERE bicycles.bicycle_id = ?';
+        query(sql, [bicycle_id]).then((results) => {
+            if (results.length <= 0) {
+                sql = 'INSERT INTO bicycles (status, bicycle_id) VALUES (0, ?)';
+                query(sql, [bicycle_id]).then((results) => {});
+            }
+            
+            sql = 'INSERT INTO locations (bicycle_id, gateway_id, longitude, latitude, timestamp, battery) VALUES(?, ?, ?, ?, ?, ?)';
+            query(sql, [bicycle_id, gateway_id, longitude, latitude, timestamp, battery]).then((results) => {
+                res.end();
+            });
         });
     }
 });
@@ -344,3 +365,7 @@ function query(sql, args) {
         });
     });
 }
+
+app.get('/hash', (req, res) => {
+
+});

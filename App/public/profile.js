@@ -6,6 +6,9 @@ let endMarker;
 let trips;
 let locations;
 let map;
+let trace;
+let path = [];
+let tripLocations = [];
 
 $(document).ready(() => {
     $.get('https://www.freepublicbicycles.org/bicycles/get/all', (data) => {
@@ -24,7 +27,6 @@ $(document).ready(() => {
     });
 
     $.get('https://www.freepublicbicycles.org/user/trips/all', (data) => {
-        // console.log(data);
         trips = data;
         let id = 0;
         for (let i = 0; i < data.length; i++) {
@@ -38,30 +40,42 @@ $(document).ready(() => {
         for (let j = 0; j < data.length; j++) {
             if (id != data[j].id) {
                 $(`#${data[j].id}`).click((event) => {
-                    let tripLocations = [];
+                    path = [];
+                    tripLocations = [];
+                    let tripIDs = [];
                     let currentID = parseInt(event.target.id);
                     console.log(currentID);
 
-                    let tripIDs = [];
-
                     for (let i = 0; i < trips.length; i++) {
                         if (trips[i].id == currentID) {
-                          tripIDs.push(trips[i].locationID);
+                            tripIDs.push(trips[i].locationID);
                         }
                     }
 
-                    // for (let i = 0; i < tripIDs.length; i++) {
-                    //     for (let j = 0; j < locations.length; i++) {
-                    //       if (tripIDs[i] == locations[j].id) {
-                    //         tripLocations.push(locations[j]);
-                    //       }
-                    //     }
-                    // }
+                    for (let i = 0; i < tripIDs.length; i++) {
+                        for (let j = 0; j < locations.length; j++) {
+                            if (tripIDs[i] == locations[j].id) {
+                                path.push({
+                                    lat: locations[j].latitude,
+                                    lng: locations[j].longitude
+                                });
+                                tripLocations.push(locations[j]);
+                            }
+                        }
+                    }
 
-                    // console.log(tripLocations);
+                    console.log(path);
 
                     startMarker = new google.maps.Marker({position: {lat: tripLocations[0].latitude, lng: tripLocations[0].longitude}, map: map});
                     endMarker = new google.maps.Marker({position: {lat: tripLocations[tripLocations.length - 1].latitude, lng: tripLocations[tripLocations.length - 1].longitude}, map: map});
+                    trace = new google.maps.Polyline({
+                        path: path,
+                        geodesic: true,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2,
+                        map: map
+                    });
                 });
             }
         }

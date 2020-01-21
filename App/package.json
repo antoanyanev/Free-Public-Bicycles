@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
- 	"start": "node index.js",
-    	"test": "echo \"Error: n test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "echo \"Error: n test specified\" && exit 1"
   },
   "author": "Antoan Yanev",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
     "express-session": "^1.17.0",
-    "mysql": "^2.17.1"
+    "mysql": "^2.17.1",
+    "password-hash": "^1.2.2"
   },
   "devDependencies": {},
   "description": ""
 }
-
