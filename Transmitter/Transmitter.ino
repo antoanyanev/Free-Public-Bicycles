@@ -2,23 +2,15 @@
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <LoRa.h>
+#include <EEPROM.h>
 
 #define RXPIN 9
 #define TXPIN 8
 
-#define INTERVAL 5
-
 TinyGPSPlus gps;
 SoftwareSerial gpsSerial(RXPIN, TXPIN);
 
-uint8_t _day;
-uint8_t _month;
-uint8_t _hour;
-uint8_t _minute;
-uint8_t _second;
-
-int _year;
-int iterations = 0;
+int id;
 int read_data_count = 0;
 
 char _latitude[16];
@@ -32,7 +24,6 @@ void get_info();
 void send_info();
 void create_info_packet();
 void create_button_packet();
-void calculate_iterations();
 void button_interrupt();
 void check_button();
 
@@ -48,9 +39,9 @@ void setup() {
     while (1);
   }
 
-  calculate_iterations();
-
   pinMode(A0, INPUT_PULLUP);
+
+  id = EEPROM.read(0);
 }
 
 void loop() {
@@ -68,7 +59,7 @@ void check_gps_connected() {
 }
 
 void send_info() {
-  if (read_data_count == 8 * 60 * 5) {
+  if (read_data_count == 8 * 6 * 5) {
     create_info_packet();
     Serial.println(_packet);
     LoRa.beginPacket();
@@ -85,18 +76,6 @@ void get_info() {
     dtostrf(gps.location.lng(), 1, 6, temp);
     sprintf(_longitude, "%s", temp);
   }
-
-  if (gps.date.isValid()) {
-    _day = gps.date.day();
-    _month = gps.date.month();
-    _year = gps.date.year();
-  }
-
-  if (gps.time.isValid()) {
-    _second = gps.time.second();
-    _minute = gps.time.minute();
-    _hour = gps.time.hour();
-  }
 }
 
 void gps_read_info() {
@@ -109,15 +88,11 @@ void gps_read_info() {
 }
 
 void create_info_packet() {
-  sprintf(_packet, "%s, %s, %d/%d/%d, %d:%d:%d", _latitude, _longitude, _day, _month, _year, _hour, _minute, _second);
+  sprintf(_packet, "%d, %s, %s", id, _latitude, _longitude);
 }
 
 void create_button_packet() {
-  sprintf(_packet, "button, %d/%d/%d, %d:%d:%d", _day, _month, _year, _hour, _minute, _second);
-}
-
-void calculate_iterations() {
-  iterations = INTERVAL * 8;
+  sprintf(_packet, "%d, button", id);
 }
 
 void check_button() {
