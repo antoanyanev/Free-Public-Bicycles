@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:FreePublicBicycles-cache
-EELAYER 29 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -26,7 +26,7 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328_P%20AVR%20MCU%20w
 	1    0    0    -1  
 $EndComp
 $Comp
-L RF_Module:RFM95W-868S2 U?
+L FreePublicBicycles-rescue:RFM95W-868S2-RF_Module U?
 U 1 1 5E26F3C6
 P 8750 2950
 F 0 "U?" H 8400 3650 50  0000 C CNN
@@ -396,7 +396,7 @@ F 3 "" H 10100 2950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Library:NEO-6M U?
+L FreePublicBicycles-rescue:NEO-6M-Library U?
 U 1 1 5E9303CF
 P 10200 4050
 F 0 "U?" H 10628 3863 50  0000 L CNN
@@ -445,7 +445,7 @@ F 3 "" H 9600 4450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Library:MP1584 U?
+L FreePublicBicycles-rescue:MP1584-Library U?
 U 1 1 5E634100
 P 5250 1250
 F 0 "U?" H 5575 1415 50  0000 C CNN
@@ -644,7 +644,7 @@ F 3 "~" H 3050 1450 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L Library:S9V11F5 U?
+L FreePublicBicycles-rescue:S9V11F5-Library U?
 U 1 1 5E63416C
 P 8050 1250
 F 0 "U?" H 8375 1415 50  0000 C CNN
