@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:PCB-cache
-EELAYER 29 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -978,17 +978,6 @@ F 3 "~" H 2250 1050 50  0001 C CNN
 	1    2250 1050
 	-1   0    0    1   
 $EndComp
-$Comp
-L Connector:Screw_Terminal_01x02 J1
-U 1 1 5E63414E
-P 1550 1300
-F 0 "J1" H 1550 950 50  0000 C CNN
-F 1 "Dynamo" H 1550 1050 50  0000 C CNN
-F 2 "TerminalBlock:TerminalBlock_Altech_AK300-2_P5.00mm" H 1550 1300 50  0001 C CNN
-F 3 "~" H 1550 1300 50  0001 C CNN
-	1    1550 1300
-	-1   0    0    1   
-$EndComp
 Wire Wire Line
 	2100 1050 2000 1050
 Wire Wire Line
@@ -1167,4 +1156,25 @@ F 3 "~" H 8200 5500 50  0001 C CNN
 $EndComp
 NoConn ~ 2850 4450
 NoConn ~ 2850 4550
+$Comp
+L Connector:Conn_01x04_Female J1
+U 1 1 5E2F9CB0
+P 1450 1300
+F 0 "J1" H 1344 875 50  0000 C CNN
+F 1 "Conn_01x04_Female" H 1344 966 50  0000 C CNN
+F 2 "Connector_Molex:Molex_KK-396_A-41791-0004_1x04_P3.96mm_Vertical" H 1450 1300 50  0001 C CNN
+F 3 "~" H 1450 1300 50  0001 C CNN
+	1    1450 1300
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1750 1200 1650 1200
+Wire Wire Line
+	1750 1300 1650 1300
+Wire Wire Line
+	1650 1200 1650 1100
+Connection ~ 1650 1200
+Wire Wire Line
+	1650 1300 1650 1400
+Connection ~ 1650 1300
 $EndSCHEMATC

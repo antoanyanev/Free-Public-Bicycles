@@ -10,7 +10,7 @@
 #define BTPIN A0
 #define GPSCTRLPIN A5
 #define BAND 868E6
-#define HDOPMIN 270
+#define HDOPMIN 300
 
 TinyGPSPlus gps;
 SoftwareSerial gpsSerial(RXPIN, TXPIN);
@@ -22,25 +22,26 @@ int hdop_value = 100;
 int info = 0;
 
 char _latitude[16];
+char last_latidude[16];
 char _longitude[16];
+char last_longitude[16];
 char temp[16];
-char _packet[64];
+char _packet[64]; 
 
-void check_gps_connected();
 void gps_read_info();
 void get_info();
 void send_info();
-void receive_info();
 void create_info_packet();
 void create_button_packet();
 void button_interrupt();
 void check_button();
+int are_equal(char arr1[], char arr2[], int n, int m);
 
 unsigned long sleep_time; // How the arduino sleeps
 
 void setup() {
     pinMode(GPSCTRLPIN, OUTPUT);
-    digitalWrite(GPSCTRLPIN, LOW);
+    digitalWrite(GPSCTRLPIN, HIGH);
   
     Serial.begin(9600);
     sleep_time = 60000;
@@ -61,7 +62,7 @@ void loop() {
 
     // Turn on GPS
     delay(20);
-    digitalWrite(GPSCTRLPIN, LOW);
+    digitalWrite(GPSCTRLPIN, HIGH);
     delay(20);
 
     // Wait for accurate data
@@ -70,7 +71,7 @@ void loop() {
 
     // Turn off GPS
     delay(20);
-    digitalWrite(GPSCTRLPIN, HIGH);
+    digitalWrite(GPSCTRLPIN, LOW);
     delay(20);
 
     // Turn on LoRa
@@ -83,19 +84,15 @@ void loop() {
     // Turn off LoRa
     LoRa.end();
 
+    strncpy(last_latidude, _latitude, 16);
+    strncpy(last_longitude, _longitude, 16);
+
     Serial.print("sleeping for ");
     Serial.println(sleep_time); 
     delay(100);
     
     sleep.pwrDownMode(); // Set sleep mode
     sleep.sleepDelay(sleep_time); // Sleep for: sleep_time 
-}
-
-void check_gps_connected() {
-    if (millis() > 5000 && gps.charsProcessed() < 10) {
-        Serial.println("No GPS detected");
-        while (true) { }
-    }
 }
 
 void send_info() {
@@ -113,34 +110,12 @@ void get_info() {
         dtostrf(gps.location.lng(), 1, 6, temp);
         sprintf(_longitude, "%s", temp);
         hdop_value = gps.hdop.value();
+        Serial.println(hdop_value);
 
-        if (hdop_value < 270) {
+        if (hdop_value < HDOPMIN && (!are_equal(last_latidude, last_latidude, 16, 16) || !are_equal(last_longitude, _longitude, 16, 16))) {
             info = 1;
         }
     }
-}
-
-void receive_info() {
-    int i = 0;
-    char reply[7];
-    int packetSize = LoRa.parsePacket();
-
-    while (!packetSize) {
-        packetSize = LoRa.parsePacket();
-    }
-
-    if (packetSize) {
-        Serial.print("Received packet ");
-
-        while (LoRa.available()) {
-            reply[i] = (char)LoRa.read();
-            i++;
-        }
-
-        // LED Feedback
-
-        Serial.println(reply);
-    } 
 }
 
 void gps_read_info() {
@@ -177,10 +152,20 @@ void check_button() {
                 LoRa.print(_packet);
                 LoRa.endPacket();
                 delay(10);
-                receive_info();
+                //receive_info();
             }
         }
         
         last_interrupt_time = interrupt_time;
     }
+}
+
+int are_equal(char arr1[], char arr2[], int n, int m) {
+    for (int i = 0; i < n; i++) {
+        if (arr1[i] != arr2[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
