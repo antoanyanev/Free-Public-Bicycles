@@ -21,6 +21,8 @@ int LoRasend = 0;
 int hdop_value = 100;
 int info = 0;
 
+bool abort_cycle = false;
+
 char _latitude[16];
 char last_latidude[16];
 char _longitude[16];
@@ -40,10 +42,10 @@ int are_equal(char arr1[], char arr2[], int n, int m);
 unsigned long sleep_time; // How the arduino sleeps
 
 void setup() {
+    pinMode(BTPIN, INPUT_PULLUP);
     pinMode(GPSCTRLPIN, OUTPUT);
     digitalWrite(GPSCTRLPIN, HIGH);
   
-    Serial.begin(9600);
     sleep_time = 60000;
 
     Serial.begin(9600);
@@ -51,10 +53,9 @@ void setup() {
     while (!Serial);
 
     LoRa.setPins(10, 7, 2);
-
-    pinMode(BTPIN, INPUT_PULLUP);
-
     id = EEPROM.read(0);
+
+    attachInterrupt(digitalPinToInterrupt(3), button_click, FALLING);
 }
 
 void loop() {
@@ -112,7 +113,7 @@ void get_info() {
         hdop_value = gps.hdop.value();
         Serial.println(hdop_value);
 
-        if (hdop_value < HDOPMIN && (!are_equal(last_latidude, last_latidude, 16, 16) || !are_equal(last_longitude, _longitude, 16, 16))) {
+        if (hdop_value < HDOPMIN) {
             info = 1;
         }
     }
@@ -140,24 +141,23 @@ void create_button_packet() {
     sprintf(_packet, "%d, button", id);
 }
 
-void check_button() {
-    if (!digitalRead(BTPIN)) {
-        static unsigned long last_interrupt_time = 0;
-        unsigned long interrupt_time = millis();
+void button_click() {
+    abort_cycle = true;
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
 
-        if (interrupt_time - last_interrupt_time > 200) {
-            if (!digitalRead(BTPIN)) {
-                create_button_packet();
-                LoRa.beginPacket();
-                LoRa.print(_packet);
-                LoRa.endPacket();
-                delay(10);
-                //receive_info();
-            }
+    if (interrupt_time - last_interrupt_time > 200) {
+        if (!digitalRead(BTPIN)) {
+            create_button_packet();
+            LoRa.beginPacket();
+            LoRa.print(_packet);
+            LoRa.endPacket();
+            delay(10);
+            //receive_info();
         }
-        
-        last_interrupt_time = interrupt_time;
     }
+    
+    last_interrupt_time = interrupt_time;
 }
 
 int are_equal(char arr1[], char arr2[], int n, int m) {
