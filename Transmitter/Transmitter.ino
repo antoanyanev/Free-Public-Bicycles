@@ -9,8 +9,9 @@
 #define TXPIN 8
 #define BTPIN A0
 #define GPSCTRLPIN A5
+#define WAKEPIN 3
 #define BAND 868E6
-#define HDOPMIN 270
+#define HDOPMIN 10000
 
 TinyGPSPlus gps;
 SoftwareSerial gpsSerial(RXPIN, TXPIN);
@@ -21,7 +22,7 @@ int LoRasend = 0;
 int hdop_value = 100;
 int info = 0;
 
-bool abort_cycle = false;
+boolean abort_cycle;
 
 char _latitude[16];
 char _longitude[16];
@@ -37,6 +38,7 @@ void create_info_packet();
 void create_button_packet();
 void button_interrupt();
 void check_button();
+void control();
 int are_equal(char arr1[], char arr2[], int n, int m);
 
 unsigned long sleep_time; // How the arduino sleeps
@@ -44,9 +46,10 @@ unsigned long sleep_time; // How the arduino sleeps
 void setup() {
     pinMode(BTPIN, INPUT_PULLUP);
     pinMode(GPSCTRLPIN, OUTPUT);
+    pinMode(WAKEPIN, INPUT_PULLUP);
     digitalWrite(GPSCTRLPIN, HIGH);
   
-    sleep_time = 60000;
+    sleep_time = 6000;
 
     Serial.begin(9600);
     gpsSerial.begin(9600);
@@ -55,35 +58,25 @@ void setup() {
     LoRa.setPins(10, 7, 2);
     id = EEPROM.read(0);
 
-    // attachInterrupt(digitalPinToInterrupt(3), button_click, FALLING);
+    abort_cycle = false;
+  
+    attachInterrupt(digitalPinToInterrupt(WAKEPIN), button_click, LOW);
+
+    Serial.println("Setup done");
 }
 
 void loop() {
-    delay(100); 
-    digitalWrite(GPSCTRLPIN, HIGH); // Turn on GPS
-    delay(20);
-
-    // Wait for accurate data
-    // Get data
-    gps_read_info();
-
-    delay(20); // Turn off GPS
-    digitalWrite(GPSCTRLPIN, LOW);
-    delay(20);
-
-    LoRa.begin(BAND); // Turn on LoRa
-    send_info(); // Send data
-    LoRa.end(); // Turn off LoRa
-
-    strncpy(last_latidude, _latitude, 16);
-    strncpy(last_longitude, _longitude, 16);
-
+    delay(100);
+    Serial.println("Waiting for GPS Info");
+    
+    control();
+    
     Serial.print("sleeping for ");
     Serial.println(sleep_time); 
     delay(100);
     
     sleep.pwrDownMode(); // Set sleep mode
-    sleep.sleepDelay(sleep_time); // Sleep for: sleep_time 
+    sleep.sleepDelay(sleep_time, abort_cycle); // Sleep for: sleep_time 
 }
 
 void send_info() {
@@ -132,23 +125,46 @@ void create_button_packet() {
 }
 
 void button_click() {
-    Serial.println("tuk");
-    abort_cycle = true;
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
 
     if (interrupt_time - last_interrupt_time > 200) {
-        if (!digitalRead(BTPIN)) {
-            create_button_packet();
-            LoRa.beginPacket();
-            LoRa.print(_packet);
-            LoRa.endPacket();
-            delay(10);
-            //receive_info();
-        }
+          detachInterrupt(digitalPinToInterrupt(WAKEPIN));
+          abort_cycle = true;
+  
+          create_button_packet();
+          LoRa.beginPacket();
+          LoRa.print(_packet);
+          LoRa.endPacket();
+          delay(10);
+          
+          abort_cycle = false;
+          attachInterrupt(digitalPinToInterrupt(WAKEPIN), button_click, LOW);
     }
     
-    last_interrupt_time = interrupt_time;
+    last_interrupt_time = interrupt_time; 
+}
+
+void control() {
+    digitalWrite(GPSCTRLPIN, HIGH); // Turn on GPS
+    delay(20);
+    
+    // Wait for accurate data
+    // Get data
+    gps_read_info();
+    
+    delay(20); // Turn off GPS
+    digitalWrite(GPSCTRLPIN, LOW);
+    delay(20);
+    
+    LoRa.begin(BAND); // Turn on LoRa
+    
+    send_info(); // Send data
+    
+    LoRa.end(); // Turn off LoRa
+    
+    strncpy(last_latidude, _latitude, 16);
+    strncpy(last_longitude, _longitude, 16);
 }
 
 int are_equal(char arr1[], char arr2[], int n, int m) {
