@@ -10,7 +10,7 @@
 #define BTPIN A0
 #define GPSCTRLPIN A5
 #define BAND 868E6
-#define HDOPMIN 300
+#define HDOPMIN 270
 
 TinyGPSPlus gps;
 SoftwareSerial gpsSerial(RXPIN, TXPIN);
@@ -24,8 +24,8 @@ int info = 0;
 bool abort_cycle = false;
 
 char _latitude[16];
-char last_latidude[16];
 char _longitude[16];
+char last_latidude[16];
 char last_longitude[16];
 char temp[16];
 char _packet[64]; 
@@ -55,35 +55,25 @@ void setup() {
     LoRa.setPins(10, 7, 2);
     id = EEPROM.read(0);
 
-    attachInterrupt(digitalPinToInterrupt(3), button_click, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(3), button_click, FALLING);
 }
 
 void loop() {
-    delay(100);
-
-    // Turn on GPS
-    delay(20);
-    digitalWrite(GPSCTRLPIN, HIGH);
+    delay(100); 
+    digitalWrite(GPSCTRLPIN, HIGH); // Turn on GPS
     delay(20);
 
     // Wait for accurate data
     // Get data
     gps_read_info();
 
-    // Turn off GPS
-    delay(20);
+    delay(20); // Turn off GPS
     digitalWrite(GPSCTRLPIN, LOW);
     delay(20);
 
-    // Turn on LoRa
-
-    LoRa.begin(BAND);
-
-    // Send data
-    send_info();
-
-    // Turn off LoRa
-    LoRa.end();
+    LoRa.begin(BAND); // Turn on LoRa
+    send_info(); // Send data
+    LoRa.end(); // Turn off LoRa
 
     strncpy(last_latidude, _latitude, 16);
     strncpy(last_longitude, _longitude, 16);
@@ -113,7 +103,7 @@ void get_info() {
         hdop_value = gps.hdop.value();
         Serial.println(hdop_value);
 
-        if (hdop_value < HDOPMIN) {
+        if (hdop_value < HDOPMIN && (!are_equal(_latitude, last_latidude, 16, 16) || !are_equal(_longitude, last_longitude, 16, 16))) {
             info = 1;
         }
     }
@@ -142,6 +132,7 @@ void create_button_packet() {
 }
 
 void button_click() {
+    Serial.println("tuk");
     abort_cycle = true;
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
