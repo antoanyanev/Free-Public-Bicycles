@@ -145,8 +145,6 @@ Wire Wire Line
 Wire Wire Line
 	9250 3350 9450 3350
 Wire Wire Line
-	9250 3250 9450 3250
-Wire Wire Line
 	8850 3550 8750 3550
 Connection ~ 8750 3550
 Wire Wire Line
@@ -288,8 +286,6 @@ Wire Wire Line
 	3150 5750 3350 5750
 Text GLabel 3350 5750 2    50   Input ~ 0
 DIO0
-Text GLabel 9450 3250 2    50   Input ~ 0
-DIO1
 NoConn ~ 9250 3150
 NoConn ~ 9250 3050
 NoConn ~ 9250 2950
@@ -1199,4 +1195,6 @@ Wire Wire Line
 	1950 1300 1950 1400
 Connection ~ 1950 1300
 NoConn ~ 3150 4750
+NoConn ~ 9250 3250
+NoConn ~ 3550 2900
 $EndSCHEMATC
