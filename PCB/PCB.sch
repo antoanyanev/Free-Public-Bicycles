@@ -1110,8 +1110,6 @@ F 3 "~" H 7050 4400 50  0001 C CNN
 	1    7050 4400
 	1    0    0    -1  
 $EndComp
-NoConn ~ 2850 4450
-NoConn ~ 2850 4550
 $Comp
 L Connector:Conn_01x04_Female J1
 U 1 1 5E2F9CB0
@@ -1285,4 +1283,32 @@ Wire Wire Line
 Connection ~ 1650 1200
 Connection ~ 1650 1300
 NoConn ~ 8850 3100
+NoConn ~ 1050 5250
+$Comp
+L Connector:Conn_01x02_Female J13
+U 1 1 5E38F499
+P 1450 2700
+F 0 "J13" H 1300 2450 50  0000 L CNN
+F 1 "Conn_01x02_Female" H 1050 2350 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 1450 2700 50  0001 C CNN
+F 3 "~" H 1450 2700 50  0001 C CNN
+	1    1450 2700
+	-1   0    0    1   
+$EndComp
+Text GLabel 2650 4450 0    50   Input ~ 0
+UART_RX
+Wire Wire Line
+	2850 4450 2650 4450
+Text GLabel 2650 4550 0    50   Input ~ 0
+UART_TX
+Wire Wire Line
+	2850 4550 2650 4550
+Text GLabel 1850 2700 2    50   Input ~ 0
+UART_RX
+Wire Wire Line
+	1650 2700 1850 2700
+Text GLabel 1850 2600 2    50   Input ~ 0
+UART_TX
+Wire Wire Line
+	1650 2600 1850 2600
 $EndSCHEMATC
