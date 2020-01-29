@@ -646,13 +646,9 @@ NoConn ~ 8850 3000
 NoConn ~ 8850 3500
 NoConn ~ 8850 3400
 Wire Wire Line
-	9000 3100 8850 3100
-Wire Wire Line
 	9000 3200 8850 3200
 Wire Wire Line
 	9000 3700 8850 3700
-Text GLabel 9000 3100 2    50   Input ~ 0
-DIO1
 Text GLabel 9000 3200 2    50   Input ~ 0
 DIO0
 Wire Wire Line
@@ -1288,4 +1284,5 @@ Wire Wire Line
 	2850 4750 2650 4750
 Connection ~ 1650 1200
 Connection ~ 1650 1300
+NoConn ~ 8850 3100
 $EndSCHEMATC

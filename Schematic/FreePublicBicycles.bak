@@ -288,11 +288,7 @@ Wire Wire Line
 	3150 5750 3350 5750
 Text GLabel 3350 5750 2    50   Input ~ 0
 DIO0
-Wire Wire Line
-	3150 5850 3350 5850
 Text GLabel 9450 3250 2    50   Input ~ 0
-DIO1
-Text GLabel 3350 5850 2    50   Input ~ 0
 DIO1
 NoConn ~ 9250 3150
 NoConn ~ 9250 3050
@@ -564,17 +560,6 @@ Wire Wire Line
 	2300 1050 2300 1250
 Wire Wire Line
 	2400 1050 2300 1050
-$Comp
-L Connector:Screw_Terminal_01x02 J1
-U 1 1 5E63414E
-P 1850 1300
-F 0 "J1" H 1850 950 50  0000 C CNN
-F 1 "Dynamo" H 1850 1050 50  0000 C CNN
-F 2 "" H 1850 1300 50  0001 C CNN
-F 3 "~" H 1850 1300 50  0001 C CNN
-	1    1850 1300
-	-1   0    0    1   
-$EndComp
 $Comp
 L Device:D_Schottky_ALT D1
 U 1 1 5E634154
@@ -851,8 +836,8 @@ Wire Wire Line
 Wire Wire Line
 	6450 1650 6850 1650
 Wire Wire Line
-	3150 4750 3350 4750
-Text GLabel 3350 4750 2    50   Input ~ 0
+	3150 5850 3350 5850
+Text GLabel 3350 5850 2    50   Input ~ 0
 BUTTON
 $Comp
 L Switch:SW_Push SW1
@@ -1173,7 +1158,7 @@ L Device:C_Small C?
 U 1 1 5E33270D
 P 10200 4450
 F 0 "C?" H 10292 4496 50  0000 L CNN
-F 1 "C_Small" H 10292 4405 50  0000 L CNN
+F 1 "100n" H 10292 4405 50  0000 L CNN
 F 2 "" H 10200 4450 50  0001 C CNN
 F 3 "~" H 10200 4450 50  0001 C CNN
 	1    10200 4450
@@ -1192,4 +1177,26 @@ F 3 "" H 10200 4650 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	10200 4550 10200 4650
+Wire Wire Line
+	2050 1300 1950 1300
+Wire Wire Line
+	1950 1200 2050 1200
+$Comp
+L Connector:Conn_01x04_Female J1
+U 1 1 5E3432F6
+P 1750 1200
+F 0 "J1" H 1644 1485 50  0000 C CNN
+F 1 "Conn_01x04_Female" H 1644 1394 50  0000 C CNN
+F 2 "" H 1750 1200 50  0001 C CNN
+F 3 "~" H 1750 1200 50  0001 C CNN
+	1    1750 1200
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	1950 1200 1950 1100
+Connection ~ 1950 1200
+Wire Wire Line
+	1950 1300 1950 1400
+Connection ~ 1950 1300
+NoConn ~ 3150 4750
 $EndSCHEMATC
