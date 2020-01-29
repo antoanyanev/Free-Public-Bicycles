@@ -131,10 +131,6 @@ Wire Wire Line
 Text GLabel 2650 4650 0    50   Input ~ 0
 DIO0
 Wire Wire Line
-	2850 4750 2650 4750
-Text GLabel 2650 4750 0    50   Input ~ 0
-DIO1
-Wire Wire Line
 	1500 4100 1700 4100
 Wire Wire Line
 	1500 4100 1300 4100
@@ -744,10 +740,6 @@ F 3 "" H 2550 5050 50  0001 C CNN
 $EndComp
 NoConn ~ 2850 5450
 NoConn ~ 2850 5550
-Text GLabel 2650 6550 0    50   Input ~ 0
-BUTTON
-Wire Wire Line
-	2850 6550 2650 6550
 Wire Wire Line
 	2850 6450 2250 6450
 $Comp
@@ -1291,4 +1283,9 @@ F 3 "" H 10200 4450 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	10200 4350 10200 4450
+NoConn ~ 2850 6550
+Text GLabel 2650 4750 0    50   Input ~ 0
+BUTTON
+Wire Wire Line
+	2850 4750 2650 4750
 $EndSCHEMATC

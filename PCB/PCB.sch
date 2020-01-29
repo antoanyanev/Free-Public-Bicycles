@@ -131,10 +131,6 @@ Wire Wire Line
 Text GLabel 2650 4650 0    50   Input ~ 0
 DIO0
 Wire Wire Line
-	2850 4750 2650 4750
-Text GLabel 2650 4750 0    50   Input ~ 0
-DIO1
-Wire Wire Line
 	1500 4100 1700 4100
 Wire Wire Line
 	1500 4100 1300 4100
@@ -744,10 +740,6 @@ F 3 "" H 2550 5050 50  0001 C CNN
 $EndComp
 NoConn ~ 2850 5450
 NoConn ~ 2850 5550
-Text GLabel 2650 6550 0    50   Input ~ 0
-BUTTON
-Wire Wire Line
-	2850 6550 2650 6550
 Wire Wire Line
 	2850 6450 2250 6450
 $Comp
@@ -1127,13 +1119,13 @@ NoConn ~ 2850 4550
 $Comp
 L Connector:Conn_01x04_Female J1
 U 1 1 5E2F9CB0
-P 1450 1300
-F 0 "J1" H 1344 875 50  0000 C CNN
-F 1 "Conn_01x04_Female" H 1344 966 50  0000 C CNN
-F 2 "Connector_Molex:Molex_KK-396_A-41791-0004_1x04_P3.96mm_Vertical" H 1450 1300 50  0001 C CNN
-F 3 "~" H 1450 1300 50  0001 C CNN
-	1    1450 1300
-	-1   0    0    1   
+P 1450 1200
+F 0 "J1" H 1344 775 50  0000 C CNN
+F 1 "Conn_01x04_Female" H 1344 866 50  0000 C CNN
+F 2 "Connector_Molex:Molex_KK-396_A-41791-0004_1x04_P3.96mm_Vertical" H 1450 1200 50  0001 C CNN
+F 3 "~" H 1450 1200 50  0001 C CNN
+	1    1450 1200
+	-1   0    0    -1  
 $EndComp
 Wire Wire Line
 	1750 1200 1650 1200
@@ -1141,10 +1133,8 @@ Wire Wire Line
 	1750 1300 1650 1300
 Wire Wire Line
 	1650 1200 1650 1100
-Connection ~ 1650 1200
 Wire Wire Line
 	1650 1300 1650 1400
-Connection ~ 1650 1300
 $Comp
 L Device:R R3
 U 1 1 5E30BB98
@@ -1291,4 +1281,11 @@ F 3 "" H 10200 4450 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	10200 4350 10200 4450
+NoConn ~ 2850 6550
+Text GLabel 2650 4750 0    50   Input ~ 0
+BUTTON
+Wire Wire Line
+	2850 4750 2650 4750
+Connection ~ 1650 1200
+Connection ~ 1650 1300
 $EndSCHEMATC

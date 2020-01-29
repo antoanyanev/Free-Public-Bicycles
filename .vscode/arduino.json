@@ -1,6 +1,6 @@
 {
     "programmer": "AVR ISP",
     "board": "arduino:avr:uno",
-    "port": "COM5",
+    "port": "COM4",
     "sketch": "Transmitter\\Transmitter.ino"
 }

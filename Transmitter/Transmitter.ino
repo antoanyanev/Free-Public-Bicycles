@@ -7,7 +7,9 @@
 
 #define RXPIN 9
 #define TXPIN 8
-#define BTPIN A0
+#define NSS 10
+#define RESET 7
+#define DIO0 2
 #define GPSCTRLPIN A5
 #define WAKEPIN 3
 #define BAND 868E6
@@ -22,6 +24,7 @@ int LoRasend = 0;
 int hdop_value = 100;
 int info = 0;
 
+boolean sleeping = false;
 boolean abort_cycle;
 
 char _latitude[16];
@@ -44,29 +47,29 @@ int are_equal(char arr1[], char arr2[], int n, int m);
 unsigned long sleep_time; // How the arduino sleeps
 
 void setup() {
-    pinMode(BTPIN, INPUT_PULLUP);
-    pinMode(GPSCTRLPIN, OUTPUT);
     pinMode(WAKEPIN, INPUT_PULLUP);
+    pinMode(GPSCTRLPIN, OUTPUT);
     digitalWrite(GPSCTRLPIN, HIGH);
   
-    sleep_time = 6000;
+    sleep_time = 300000;
 
     Serial.begin(9600);
     gpsSerial.begin(9600);
     while (!Serial);
 
-    LoRa.setPins(10, 7, 2);
+    LoRa.setPins(NSS, RESET, DIO0);
     id = EEPROM.read(0);
 
     abort_cycle = false;
   
-    attachInterrupt(digitalPinToInterrupt(WAKEPIN), button_click, LOW);
+    attachInterrupt(digitalPinToInterrupt(WAKEPIN), button_click, FALLING);
 
     Serial.println("Setup done");
 }
 
 void loop() {
     delay(100);
+    sleeping = false;
     Serial.println("Waiting for GPS Info");
     
     control();
@@ -75,6 +78,8 @@ void loop() {
     Serial.println(sleep_time); 
     delay(100);
     
+    sleeping = true;
+
     sleep.pwrDownMode(); // Set sleep mode
     sleep.sleepDelay(sleep_time, abort_cycle); // Sleep for: sleep_time 
 }
@@ -129,17 +134,22 @@ void button_click() {
     unsigned long interrupt_time = millis();
 
     if (interrupt_time - last_interrupt_time > 200) {
-          detachInterrupt(digitalPinToInterrupt(WAKEPIN));
-          abort_cycle = true;
+            // detachInterrupt(digitalPinToInterrupt(WAKEPIN));
+
+            if (sleeping) {
+                abort_cycle = true;
+            }
   
-          create_button_packet();
-          LoRa.beginPacket();
-          LoRa.print(_packet);
-          LoRa.endPacket();
-          delay(10);
+            create_button_packet();
+            LoRa.beginPacket();
+            LoRa.print(_packet);
+            LoRa.endPacket();
+            delay(10);
           
-          abort_cycle = false;
-          attachInterrupt(digitalPinToInterrupt(WAKEPIN), button_click, LOW);
+            if (sleeping) {
+                abort_cycle = false;
+            }
+
     }
     
     last_interrupt_time = interrupt_time; 
