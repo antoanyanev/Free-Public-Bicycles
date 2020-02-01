@@ -12,6 +12,7 @@
 #define DIO0 2 // LoRa module DIO0 pin
 #define GPSCTRLPIN A5 // GPS power enable pin
 #define WAKEPIN 3 // Button pin
+#define BATTPIN A3 // Batter percentage measurement pin
 #define BAND 868E6 // LoRa module operating frequency
 #define HDOPMIN 10000 // Minimum LoRa location information accuracy
 
@@ -22,6 +23,7 @@ Sleep sleep; // Power management library initialization
 int id; // ID of the bicycle
 int hdop_value = 10000; // Current horizontal dimmunition of position 
 int info = 0; // Allows transmission of data
+int battery;
 
 boolean sleeping = true; // Power state 
 boolean abort_cycle; // Aborts sleeping cycle when set to false
@@ -41,6 +43,8 @@ void create_button_packet(); // Creates button packet
 void button_interrupt(); // Handles button press interrupt
 void control(); // Main logic
 int are_equal(char arr1[], char arr2[], int n, int m); // Cheks if two char arrays are the same
+int get_battery_percentage();
+double my_map(double x, double in_min, double in_max, double out_min, double out_max);
 
 unsigned long sleep_time; // How the arduino sleeps
 
@@ -131,7 +135,7 @@ void gps_read_info() { // Read GPS info
 }
 
 void create_info_packet() { // Create data packet
-    sprintf(_packet, "%d, %s, %s", id, _latitude, _longitude);
+    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, 80);
 }
 
 void create_button_packet() { // Create button packet
@@ -166,7 +170,7 @@ void button_click() { // Button press ISR
     last_interrupt_time = interrupt_time; // Set last interrupt time 
 }
 
-void control() {// Main control logic
+void control() { // Main control logic
     // LoRa.end(); // Turn off LoRa
     digitalWrite(GPSCTRLPIN, HIGH); // Turn on GPS
     delay(20);
@@ -198,4 +202,20 @@ int are_equal(char arr1[], char arr2[], int n, int m) { // Check if to char arra
     }
 
     return 1;
+}
+
+int get_battery_percentage() {
+    int measured = analogRead(BATTPIN);
+    double volts = my_map(measured, 0, 1023, 0, 5);
+
+    if (volts >= 3.7 && volts <= 4.2) {
+        int percentage = (int) my_map(volts, 3.7, 4.2, 0, 100);
+        return percentage;
+    }
+
+    return 0;
+}
+
+double my_map(double x, double in_min, double in_max, double out_min, double out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
