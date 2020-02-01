@@ -805,7 +805,6 @@ $EndComp
 Wire Wire Line
 	2750 6350 2850 6350
 NoConn ~ 2850 6750
-NoConn ~ 2850 6850
 NoConn ~ 2850 6950
 $Comp
 L Connector:Conn_01x02_Female J3
@@ -1283,7 +1282,6 @@ Wire Wire Line
 Connection ~ 1650 1200
 Connection ~ 1650 1300
 NoConn ~ 8850 3100
-NoConn ~ 1050 5250
 $Comp
 L Connector:Conn_01x02_Female J13
 U 1 1 5E38F499
@@ -1311,4 +1309,25 @@ Text GLabel 1850 2600 2    50   Input ~ 0
 UART_TX
 Wire Wire Line
 	1650 2600 1850 2600
+$Comp
+L Device:R R5
+U 1 1 5E3486A5
+P 2550 6850
+F 0 "R5" V 2343 6850 50  0000 C CNN
+F 1 "10k" V 2434 6850 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 2480 6850 50  0001 C CNN
+F 3 "~" H 2550 6850 50  0001 C CNN
+	1    2550 6850
+	0    1    1    0   
+$EndComp
+Text GLabel 6850 1100 1    50   Input ~ 0
+VBAT
+Wire Wire Line
+	6850 1100 6850 1250
+Wire Wire Line
+	2700 6850 2850 6850
+Wire Wire Line
+	2400 6850 2300 6850
+Text GLabel 2300 6850 0    50   Input ~ 0
+VBAT
 $EndSCHEMATC
