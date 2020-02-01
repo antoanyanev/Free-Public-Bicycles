@@ -77,7 +77,7 @@ app.post('/auth', (req, res) => { // Check users log in credentials
     let sql;
 
     // Check if all parameters have been sent
-    if (check(username) && checkPassword(password)) {
+    if (checkUsername(username) && password) {
         sql = 'SELECT * FROM accounts WHERE username = ?';
         query(sql, [username]).then((results) => {
             hashedPassword = results[0].password;

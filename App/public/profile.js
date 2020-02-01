@@ -31,9 +31,11 @@ $(document).ready(() => { // Wait for page to load
     $.get('https://www.freepublicbicycles.org/user/trips/all', (data) => { // Get all trips of user
         trips = data;
 
+        let j = 0;
         for (let i = 0; i < data.length; i++) {
             if (id != data[i].id) {
-                $("#trips").append(`<li id="${data[i].id}">Trip Number: ${data[i].id}</li>`); // Add new trip button
+                j++;
+                $("#trips").append(`<li id="${data[i].id}">Trip Number: ${j}</li>`); // Add new trip button
                 id = data[i].id;
             }
         }
