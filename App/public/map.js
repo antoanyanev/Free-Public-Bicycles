@@ -15,7 +15,7 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), { // Create map object
         center: {lat: 42.7254843, lng: 23.3056195}, // Set center point coordinates
         zoom: 16, // Set the initial zoom level of the map
-        styles: [
+        styles: [ // Set map styles
           {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
           {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
           {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
@@ -255,14 +255,14 @@ function refreshMarkers() { // Create custom map buttons
     }, markerRefreshInterval);
 }
 
-function rentBicycle() {
-    let content = $("#marker").text();
-    let bicycleIDIndex = content.indexOf('Bicycle');
-    let gatewayIDIndex = content.indexOf('Gateway');
-    let bicycleID = parseInt(content.substring(bicycleIDIndex, gatewayIDIndex).split(':')[1].trim());
-    let gatewayID = parseInt(content.substring(gatewayIDIndex).split(':')[1].trim());
+function rentBicycle() { // Make a rent request for the current bicycle
+    let content = $("#marker").text(); // Get the content of the popup window
+    let bicycleIDIndex = content.indexOf('Bicycle'); // Find position of bicycle_id
+    let gatewayIDIndex = content.indexOf('Gateway'); // Find position of gateway_id
+    let bicycleID = parseInt(content.substring(bicycleIDIndex, gatewayIDIndex).split(':')[1].trim()); // Extract bicycle id
+    let gatewayID = parseInt(content.substring(gatewayIDIndex).split(':')[1].trim()); // Extract gaeway_id
 
-    $.post('https://www.freepublicbicycles.org/bicycles/update', {bicycle_id: bicycleID, gateway_id: gatewayID} , (data) => {
+    $.post('https://www.freepublicbicycles.org/bicycles/update', {bicycle_id: bicycleID, gateway_id: gatewayID} , (data) => { // Send a update request to the API
         console.log(data);
     });
 }

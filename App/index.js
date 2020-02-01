@@ -77,7 +77,7 @@ app.post('/auth', (req, res) => { // Check users log in credentials
     let sql;
 
     // Check if all parameters have been sent
-    if (username && password) {
+    if (check(username) && checkPassword(password)) {
         sql = 'SELECT * FROM accounts WHERE username = ?';
         query(sql, [username]).then((results) => {
             hashedPassword = results[0].password;
@@ -124,7 +124,7 @@ app.post('/register', (req, res) => { // Register new user
     let sql;
 
     // Check if all parameters have been sent
-    if (username && email && password) {
+    if (checkUsername(username) && checkEmail(email) && checkPassword(password)) {
         // Insert new user into DB
         let hashedPassword = passwordHash.generate(password);
         sql = 'INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)';
@@ -234,7 +234,6 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
         };
 
         req.session.bicycle_id = bicycle_id;
-        console.log(req.session.bicycle_id);
         req.session.gateway_id = gateway_id;
         req.session.status = true;
         req.session.timestamp = (new Date()).toISOString().slice(0, 19).replace(/-/g, "/").replace("T", " ");
@@ -281,32 +280,33 @@ app.post('/bicycles/rent', (req, res) => { // Website button; first
     res.end();
 });
 
-app.get('/user/status', (req, res) => {
-    let response = {
-        bicycle_id: req.session.bicycle_id,
-        gateway_id: req.session.gateway_id,
-        status: req.session.status
+app.get('/user/status', (req, res) => { // Get user's status
+    let response = { // Create response JSON object
+        bicycle_id: req.session.bicycle_id, // Bicycle_id
+        gateway_id: req.session.gateway_id, // Gateway_id
+        status: req.session.status // Status of user
     };
 
-    res.send(response);
+    res.send(response); // Send JSON response
 });
 
-app.post('/bicycles/letgo', (req, res) => {
-    let sql;
-    let username = req.session.username;
-    let email = req.session.email;
-    let password = req.session.password;
-    let id = req.session.userID;
-    let timestamp = req.session.timestamp;
-    let biggestTripId = 0;
-    let bicycle_id = req.session.bicycle_id;
-    let values = [];
+app.post('/bicycles/letgo', (req, res) => { // Let go of rented bicycle
+    let sql; // Create sql query string
+    let username = req.session.username; // Extract username 
+    let email = req.session.email; // Extract email
+    let id = req.session.userID; // Extract user id
+    let timestamp = req.session.timestamp; // Extrat time of renting
+    let biggestTripId = 0; // Initialize bigest trip number id
+    let bicycle_id = req.session.bicycle_id; // Extract rented bicycle id
+    let values = []; // All location from new trip
 
+    // Set rented bicycle's status to vacant
     sql = 'UPDATE bicycles SET status = 0 WHERE bicycle_id = ?';
     query(sql, [req.body.bicycle_id]).then((results) => {
 
     });
 
+    // Extract biggest trip ID
     sql = 'SELECT a.id, t.tripID FROM accounts as a INNER JOIN accountToTrip as t ON a.id = t.accountID WHERE a.username = ?'
     query(sql, [username]).then((results) => {
         for (let i = 0; i < results.length; i++) {
@@ -315,9 +315,11 @@ app.post('/bicycles/letgo', (req, res) => {
             }
         }
 
+        // Insert locations into new trip
         biggestTripId++;
         sql = `INSERT INTO accountToTrip (accountID, tripID) VALUES (?, ?)`;
-        query(sql, [id, biggestTripId]).then((resuts) => {
+        query(sql, [id, biggestTripId]).then((results) => {
+            // Select all location of rented bike after renting timestamp
             sql = 'SELECT locations.id, locations.bicycle_id FROM locations WHERE timestamp > ? ORDER BY bicycle_id, timestamp';
             query(sql, [req.session.timestamp]).then((results) => {
                 for (let i = 0; i < results.length; i++) {
@@ -326,6 +328,7 @@ app.post('/bicycles/letgo', (req, res) => {
                     }
                 }
 
+                // Insert values into trip
                 sql = 'INSERT INTO trips (id, locationID, userID, bicycle_id) VALUES ?';
                 query(sql, [values]).then((results) => {
 
@@ -334,14 +337,14 @@ app.post('/bicycles/letgo', (req, res) => {
         });
     });
 
-    req.session.bicycle_id = null;
-    req.session.gateway_id = null;
-    req.session.status = 0;
+    req.session.bicycle_id = null; // Reset user's current bicycle id
+    req.session.gateway_id = null; // Reset user's current gateway_id
+    req.session.status = 0; // Set user's status to free
 
-    res.end();
+    res.end(); // End HTTPS response
 });
 
-app.get('/user/trips/all', (req, res) => {
+app.get('/user/trips/all', (req, res) => { // Get all trips for user
     let sql = 'SELECT * FROM trips WHERE userID = ?';
     query(sql, [req.session.userID]).then((results) => {
         res.send(results);
@@ -355,9 +358,9 @@ https.createServer({ // Create HTTPS server
     console.log('Listening...');
 });
 
-function query(sql, args) {
-    return new Promise((resolve, reject) => {
-        connection.query(sql, args, (error, results) => {
+function query(sql, args) { // MySQL DB query Promise
+    return new Promise((resolve, reject) => { // Create new promise
+        connection.query(sql, args, (error, results) => { // Execute query
             if (error) {
                 return reject(error);
             }
@@ -366,6 +369,20 @@ function query(sql, args) {
     });
 }
 
-app.get('/hash', (req, res) => {
+function checkUsername(username) {
+    let re = /^(?=.{4,20}$)[a-zA-Z0-9]/;
 
-});
+    return re.test(username);     
+}
+
+function checkPassword(password) {
+    let re = /^(?=.*[a-z])(?=.{8,})/
+
+    return re.test(password);
+}
+
+function checkEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    
+    return re.test(String(email).toLowerCase());
+}
