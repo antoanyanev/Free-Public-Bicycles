@@ -11,3 +11,13 @@ html, body {
 body {
     overflow: hidden;
 }
+
+@media only screen and (max-width: 600px) {
+    #map {
+        height: 100%;
+    }
+    
+    html, body {
+        height: 100%;
+    }    
+}

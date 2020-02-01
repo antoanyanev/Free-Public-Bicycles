@@ -3,6 +3,8 @@ let coords = new Array(); // Stores data of all free bicycles
 let markers = new Array(); // Stores markers that correspond to the data objects in coords
 let userMarker; // Marker that indicates the current posiotion of the user
 let markerRefreshInterval = 10000; // Interval between each marker refresh
+let userLat;
+let userLng;
 
 const icons = { // Set of image urls; All of them respond to different battery percantage levels:
     battery_red: './images/marker_red.png', // 30 - 40%
@@ -12,95 +14,102 @@ const icons = { // Set of image urls; All of them respond to different battery p
 };
 
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), { // Create map object
-        center: {lat: 42.7254843, lng: 23.3056195}, // Set center point coordinates
-        zoom: 16, // Set the initial zoom level of the map
-        styles: [ // Set map styles
-          {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
-          {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
-          {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
-          {
-            featureType: 'administrative.locality',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#d59563'}]
-          },
-          {
-            featureType: 'poi',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#d59563'}]
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'geometry',
-            stylers: [{color: '#263c3f'}]
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#6b9a76'}]
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry',
-            stylers: [{color: '#38414e'}]
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry.stroke',
-            stylers: [{color: '#212a37'}]
-          },
-          {
-            featureType: 'road',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#9ca5b3'}]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'geometry',
-            stylers: [{color: '#746855'}]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'geometry.stroke',
-            stylers: [{color: '#1f2835'}]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#f3d19c'}]
-          },
-          {
-            featureType: 'transit',
-            elementType: 'geometry',
-            stylers: [{color: '#2f3948'}]
-          },
-          {
-            featureType: 'transit.station',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#d59563'}]
-          },
-          {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{color: '#17263c'}]
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.fill',
-            stylers: [{color: '#515c6d'}]
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.stroke',
-            stylers: [{color: '#17263c'}]
-          }
-        ]
-    });
-
-    createButtons(); // Create custom map buttons
-    userMarker = new google.maps.Marker({position: {lat: 42.7254843, lng: 23.3056195}, map: map}); // Create initial user marker
-    updateMarkers(); // Update & Create  Markers 
-    refreshMarkers(); // 
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
+        
+            map = new google.maps.Map(document.getElementById('map'), { // Create map object
+                center: {lat: userLat, lng: userLng}, // Set center point coordinates
+                zoom: 16, // Set the initial zoom level of the map
+                styles: [ // Set map styles
+                  {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+                  {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+                  {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+                  {
+                    featureType: 'administrative.locality',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#d59563'}]
+                  },
+                  {
+                    featureType: 'poi',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#d59563'}]
+                  },
+                  {
+                    featureType: 'poi.park',
+                    elementType: 'geometry',
+                    stylers: [{color: '#263c3f'}]
+                  },
+                  {
+                    featureType: 'poi.park',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#6b9a76'}]
+                  },
+                  {
+                    featureType: 'road',
+                    elementType: 'geometry',
+                    stylers: [{color: '#38414e'}]
+                  },
+                  {
+                    featureType: 'road',
+                    elementType: 'geometry.stroke',
+                    stylers: [{color: '#212a37'}]
+                  },
+                  {
+                    featureType: 'road',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#9ca5b3'}]
+                  },
+                  {
+                    featureType: 'road.highway',
+                    elementType: 'geometry',
+                    stylers: [{color: '#746855'}]
+                  },
+                  {
+                    featureType: 'road.highway',
+                    elementType: 'geometry.stroke',
+                    stylers: [{color: '#1f2835'}]
+                  },
+                  {
+                    featureType: 'road.highway',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#f3d19c'}]
+                  },
+                  {
+                    featureType: 'transit',
+                    elementType: 'geometry',
+                    stylers: [{color: '#2f3948'}]
+                  },
+                  {
+                    featureType: 'transit.station',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#d59563'}]
+                  },
+                  {
+                    featureType: 'water',
+                    elementType: 'geometry',
+                    stylers: [{color: '#17263c'}]
+                  },
+                  {
+                    featureType: 'water',
+                    elementType: 'labels.text.fill',
+                    stylers: [{color: '#515c6d'}]
+                  },
+                  {
+                    featureType: 'water',
+                    elementType: 'labels.text.stroke',
+                    stylers: [{color: '#17263c'}]
+                  }
+                ]
+            });
+        
+            createButtons(); // Create custom map buttons
+            userMarker = new google.maps.Marker({position: {lat: userLat, lng: userLng}, map: map}); // Create initial user marker
+            updateMarkers(); // Update & Create  Markers 
+            refreshMarkers(); // 
+        });
+    }
 }
 
 function updateMarkers() { // GETs free bicycles' data and creates new markerss

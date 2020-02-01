@@ -100,6 +100,8 @@ app.post('/auth', (req, res) => { // Check users log in credentials
     
                 res.end();
             });   
+            } else {
+                res.send('Incorrect Username and/or Password!');
             }
         });
     } else {
