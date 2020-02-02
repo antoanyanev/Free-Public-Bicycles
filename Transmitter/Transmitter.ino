@@ -43,8 +43,8 @@ void create_button_packet(); // Creates button packet
 void button_interrupt(); // Handles button press interrupt
 void control(); // Main logic
 int are_equal(char arr1[], char arr2[], int n, int m); // Cheks if two char arrays are the same
-int get_battery_percentage();
-double my_map(double x, double in_min, double in_max, double out_min, double out_max);
+int get_battery_percentage(); // Calculates battery level
+double my_map(double x, double in_min, double in_max, double out_min, double out_max); // Modified arduino map function to work with floating point numbers
 
 unsigned long sleep_time; // How the arduino sleeps
 
@@ -204,18 +204,18 @@ int are_equal(char arr1[], char arr2[], int n, int m) { // Check if to char arra
     return 1;
 }
 
-int get_battery_percentage() {
-    int measured = analogRead(BATTPIN);
-    double volts = my_map(measured, 0, 1023, 0, 5);
+int get_battery_percentage() { // Calculates battery level
+    int measured = analogRead(BATTPIN); // Measured value 0-1023
+    double volts = my_map(measured, 0, 1023, 0, 5); // Measured value converted to volts
 
-    if (volts >= 3.7 && volts <= 4.2) {
-        int percentage = (int) my_map(volts, 3.7, 4.2, 0, 100);
+    if (volts >= 3.7 && volts <= 4.2) { // Check if measured battery level is in the battery's voltage range
+        int percentage = (int) my_map(volts, 3.7, 4.2, 0, 100); // Convert voltage to percent
         return percentage;
     }
 
     return 0;
 }
 
-double my_map(double x, double in_min, double in_max, double out_min, double out_max) {
+double my_map(double x, double in_min, double in_max, double out_min, double out_max) { // Modified arduino map function to work with floating point numbers
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
