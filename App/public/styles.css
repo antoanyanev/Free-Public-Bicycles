@@ -1,9 +1,81 @@
-.navbar-custom {
-    background-color: #28313e;
-    color: #ffffff;
+@media (min-width: 768px) {
+    html {
+        height: 100%;
+    }
+    
+    body {
+        height: 100%;
+        background-color: lightgray;
+    }
+
+    #map {
+        height: 100%;
+    }
+
+    .navbar {
+        min-height: 80px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+    
+    a {
+        font-size: 38px;
+    }
+    
+    .navbar-brand {
+        font-size: 38px;
+    }
+
+    #heading-div {
+        text-align: center;
+        margin-top: 3%;
+    }
+
+    .card {
+        width: 100%;
+        margin-top: 5vh;
+        margin-left: 0vh;
+    }
+
+    #icon {
+        padding-left: 0px;;
+        width: 64px;
+        height: 64px;
+    }
 }
 
-.navbar-custom .navbar-brand, 
-.navbar-custom .navbar-text { 
-    color: green; 
-} 
+@media (min-width: 992px) {
+    body {
+        background-color: lightgrey;
+    }
+
+    html {
+        height: 100%;
+    }
+    
+    .navbar {
+        min-height: 60px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+    
+    a {
+        font-size: 20px;
+    }
+    
+    .navbar-brand {
+        font-size: 20px;
+    }
+
+    #heading-div {
+        text-align: center;
+        margin-top: 3%;
+    }
+    
+    .card {
+        width: 50vh;
+        float: left;
+        margin-top: 10vh;
+        margin-left: 35vh;
+    }
+}

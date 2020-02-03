@@ -127,24 +127,33 @@ app.post('/register', (req, res) => { // Register new user
 
     // Check if all parameters have been sent
     if (checkUsername(username) && checkEmail(email) && checkPassword(password)) {
-        // Insert new user into DB
-        let hashedPassword = passwordHash.generate(password);
-        sql = 'INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)';
-        query(sql, [username, hashedPassword, email]).then((results) => {
-            req.session.loggedin = true; // Begin a session for the new user
-            req.session.username = username;
-            req.session.email = email;
-            req.session.bicycle_id = null;
-            req.session.gateway_id = null;
-            req.session.status = 0;
-            res.redirect('/home'); // Redirect user to the homepage
-            res.end(); // Send response
-        });
+        sql = 'SELECT * FROM accounts where username = ?'; // Check for existing user
+        query(sql, username).then((results) => {
+            if (results.length > 0) {
+                res.send('Username in use!');
+            } else {
+                // Insert new user into DB
+                let hashedPassword = passwordHash.generate(password);
+                sql = 'INSERT INTO accounts (username, password, email) VALUES(?, ?, ?)';
+                query(sql, [username, hashedPassword, email]).then((results) => {
+                    req.session.loggedin = true; // Begin a session for the new user
+                    req.session.username = username;
+                    req.session.email = email;
+                    req.session.bicycle_id = null;
+                    req.session.gateway_id = null;
+                    req.session.status = 0;
+                    res.redirect('/home'); // Redirect user to the homepage
+                    res.end(); // Send response
+                });
 
-        sql = 'SELECT * FROM accounts WHERE username = ?';
-        query(sql, [username]).then((results) => {
-            req.session.userID = parseInt(results[0].id);
-        });
+                sql = 'SELECT * FROM accounts WHERE username = ?';
+                query(sql, [username]).then((results) => {
+                    req.session.userID = parseInt(results[0].id);
+                });
+                    }
+                });
+    } else {
+        res.send("Invalid credentials!");
     }
 });
 
