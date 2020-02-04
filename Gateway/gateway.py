@@ -1,7 +1,11 @@
 import PyLora # Import LoRa library
 import time # Import time library
 import requests # Import HTTP requests library
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from datetime import datetime # Import date and time library
+import re
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 global gateway_id # Create the id of the current gateway 
 gateway_id = 101 # Set the id of the gateway
@@ -9,24 +13,17 @@ gateway_id = 101 # Set the id of the gateway
 def check_packet(packet): # Checks if the received LoRa packet is button click
     return "button" in packet # Check if the packet containts button message
 
-PyLora.init() # Initialize LoRa module
-PyLora.set_frequency(868000000) # Set the operating frequency of the LoRa module
-PyLora.enable_crc() # Enable CRC on the LoRa module
+def validate_packet(packet): # cheks if packet is valid 
+    rx = "^[a-zA-Z0-9., ]" # Allowed symbols: a-z, A-Z, 0-9, ',', '.'
+    return True if re.search(rx, packet) else False
 
-print("Gateway listening...")
-
-while True:
-    PyLora.receive() # Listen for incoming packets
-    while not PyLora.packet_available():
-        time.sleep(0)
-    rec = PyLora.receive_packet() # Read incoming packets
+def handle_packet(packet): # Main packet handling
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S'); # Get time of reception
     print now
-    info = rec.split(',') # Separate message
+    info = packet.split(',') # Separate message
     bicycle_id = info[0].strip().decode('utf-8') # Get the bicycle_id
 
-    if (check_packet(rec)): # Check if the message is a button message
-        print "tuk"
+    if (check_packet(packet)): # Check if the message is a button message
         PyLora.send_packet('{}, button_ack'.format(bicycle_id)) # Reply with acknowldgement
         req = requests.post('https://www.freepublicbicycles.org/bicycles/rent', verify = False, json = { # Make a rent request to the FreePublicBicycles API
             "bicycle_id": bicycle_id, # Set data for the reuest
@@ -48,4 +45,21 @@ while True:
         except:
             print 'Request Failed'
 
-    print 'Packet received: {}'.format(rec)
+    print 'Packet received: {}'.format(packet)
+
+PyLora.init() # Initialize LoRa module
+PyLora.set_frequency(868000000) # Set the operating frequency of the LoRa module
+PyLora.enable_crc() # Enable CRC on the LoRa module
+
+print("Gateway listening...")
+
+while True:
+    PyLora.receive() # Listen for incoming packets
+    while not PyLora.packet_available():
+        time.sleep(0)
+    rec = PyLora.receive_packet() # Read incoming packets
+    try:
+        if (validate_packet(rec)):
+            handle_packet(rec)
+    except:
+        print 'Invalid packet'
