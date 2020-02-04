@@ -11,6 +11,8 @@ const passwordHash = require('password-hash');
 let pendingBicycles = []; // List of pending rents
 let timeouts = []; // List of timeout objects for renting
 
+const timeoutDelay = 10000;
+
 var connection = mysql.createConnection({ // Create a connection to SQL database
 	host     : 'localhost',
 	user     : 'debian-sys-maint',
@@ -73,40 +75,12 @@ app.post('/auth', (req, res) => { // Check users log in credentials
     // Acquire request parameters
     let username = req.body.username;
     let password = req.body.password;
-    let hashedPassword;
-    let sql;
 
     // Check if all parameters have been sent
     if (checkUsername(username) && password) {
-        sql = 'SELECT * FROM accounts WHERE username = ?';
-        query(sql, [username]).then((results) => {
-            hashedPassword = results[0].password;
-
-            if (passwordHash.verify(password, hashedPassword)) {
-                // Look up user in DB
-                sql = 'SELECT * FROM accounts WHERE username = ? AND password = ?';
-                query(sql, [username, hashedPassword]).then((results) => {
-                if (results.length > 0) {
-                    req.session.loggedin = true; // Begin new session
-                    req.session.username = username;
-                    req.session.userID = parseInt(results[0].id);
-                    req.session.bicycle_id = null;
-                    req.session.gateway_id = null;
-                    req.session.status = 0;
-                    res.redirect('/home'); // redirect user to home page
-                } else {
-                    res.send('Incorrect Username and/or Password!'); // Send acknowledgement for incorrent log in credentials
-                }
-    
-                res.end();
-            });   
-            } else {
-                res.send('Incorrect Username and/or Password!');
-            }
-        });
+        auth(req, res, username, password);
     } else {
         res.send('Please enter Username and Password!');
-        res.end();
     }
 });
 
@@ -123,11 +97,163 @@ app.post('/register', (req, res) => { // Register new user
     let username = req.body.username;
     let email = req.body.email;
     let password = req.body.password;
-    let sql;
 
     // Check if all parameters have been sent
+    register(req, res, username, email, password);
+});
+
+app.get('/logout', (req, res) => { // Ends user session
+    req.session.destroy((err) => { // Destroy session
+        if (err) {
+            console.log(err);
+        } else {
+            res.redirect('/login'); // Redirect user to login page
+        }
+    });
+});
+
+app.put('/locations/add', (req, res) => { // Register a bicycle location in DB
+    // Parse parameters from PUT request
+    let bicycle_id = parseInt(req.body.bicycle_id);
+    let gateway_id = parseInt(req.body.gateway_id);
+    let longitude = parseFloat(req.body.longitude);
+    let latitude = parseFloat(req.body.latitude);
+    let timestamp = req.body.timestamp;
+    let battery = parseInt(req.body.battery);
+
+    addLocation(req, res, bicycle_id, gateway_id, longitude, latitude, timestamp, battery); // Add location to DB
+});
+
+app.get('/bicycles/get/all', (req, res) => { // Return a list of all bicycles
+    // Get all bicycles from DB
+    let sql = 'SELECT * FROM locations';
+    query(sql, []).then((results) => {
+        if (results.length > 0)
+            res.send(results);
+    });
+});
+
+app.get('/bicycles/get/free', (req, res) => { // Return list of available free bicycles
+    // Get all free bicycles from DB
+    let sql = 'SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0 AND y.battery > 30';
+    query(sql, []).then((results) => {
+        if (results.length > 0) 
+            res.send(results);
+    });
+});
+
+app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
+    // Parse parameters from request
+    let bicycle_id = parseInt(req.body.bicycle_id);
+    let gateway_id = parseInt(req.body.gateway_id);
+
+    update(req, res, bicycle_id, gateway_id);
+});
+
+app.post('/bicycles/rent', (req, res) => { // Website button; first
+    // Parse request parameters
+    let bicycle_id = parseInt(req.body.bicycle_id); 
+    let gateway_id = parseInt(req.body.gateway_id); 
+
+    rent(req, res, bicycle_id, gateway_id);
+});
+
+app.get('/user/status', (req, res) => { // Get user's status
+    let response = { // Create response JSON object
+        bicycle_id: req.session.bicycle_id, // Bicycle_id
+        gateway_id: req.session.gateway_id, // Gateway_id
+        status: req.session.status // Status of user
+    };
+
+    res.send(response); // Send JSON response
+});
+
+app.post('/bicycles/letgo', (req, res) => { // Let go of rented bicycle
+    let username = req.session.username; // Extract username 
+    let email = req.session.email; // Extract email
+    let id = req.session.userID; // Extract user id
+    let timestamp = req.session.timestamp; // Extrat time of renting
+    let bicycle_id = req.session.bicycle_id; // Extract rented bicycle id
+    
+    letGo(req, res, username, email, id, timestamp, bicycle_id);
+});
+
+app.get('/user/trips/all', (req, res) => { // Get all trips for user
+    let sql = 'SELECT * FROM trips WHERE userID = ?';
+    query(sql, [req.session.userID]).then((results) => {
+        res.send(results);
+    });
+});
+
+https.createServer({ // Create HTTPS server 
+    key: fs.readFileSync('server.key'), // Read SSL key
+    cert: fs.readFileSync('server.cert') // READ SSL certificate
+}, app).listen(443, () => { // Set app to listen ot port 443 for HTTPS
+    console.log('Listening...');
+});
+
+function query(sql, args) { // MySQL DB query Promise
+    return new Promise((resolve, reject) => { // Create new promise
+        connection.query(sql, args, (error, results) => { // Execute query
+            if (error) {
+                return reject(error);
+            }
+            resolve(results);
+        });
+    });
+}
+
+function checkUsername(username) {
+    let re = /^(?=.{4,20}$)[a-zA-Z0-9]/;
+
+    return re.test(username);     
+}
+
+function checkPassword(password) {
+    let re = /^(?=.*[a-z])(?=.{8,})/
+
+    return re.test(password);
+}
+
+function checkEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    
+    return re.test(String(email).toLowerCase());
+}
+
+function auth(req, res, username, password) { // Handles user login verification
+    let hashedPassword;
+    let sql = 'SELECT * FROM accounts WHERE username = ?';
+    query(sql, [username]).then((results) => { // Get hased password from DB
+        hashedPassword = results[0].password;
+
+        if (passwordHash.verify(password, hashedPassword)) { // Check if input password and DB password match
+            // Look up user in DB
+            sql = 'SELECT * FROM accounts WHERE username = ? AND password = ?';
+            query(sql, [username, hashedPassword]).then((results) => {
+            if (results.length > 0) {
+                req.session.loggedin = true; // Begin new session
+                req.session.username = username;
+                req.session.userID = parseInt(results[0].id);
+                req.session.bicycle_id = null;
+                req.session.gateway_id = null;
+                req.session.status = 0;
+                res.redirect('/home'); // redirect user to home page
+            } else {
+                res.send('Incorrect Username and/or Password!'); // Send acknowledgement for incorrent log in credentials
+            }
+
+            res.end();
+        });   
+        } else {
+            res.send('Incorrect Username and/or Password!');
+        }
+    });
+}
+
+function register(req, res, username, email, password) { // Handles user registration
     if (checkUsername(username) && checkEmail(email) && checkPassword(password)) {
-        sql = 'SELECT * FROM accounts where username = ?'; // Check for existing user
+        let sql = 'SELECT * FROM accounts where username = ?'; // Check for existing user
         query(sql, username).then((results) => {
             if (results.length > 0) {
                 res.send('Username in use!');
@@ -155,33 +281,13 @@ app.post('/register', (req, res) => { // Register new user
     } else {
         res.send("Invalid credentials!");
     }
-});
+}
 
-app.get('/logout', (req, res) => { // Ends user session
-    req.session.destroy((err) => { // Destroy session
-        if (err) {
-            console.log(err);
-        } else {
-            res.redirect('/login'); // Redirect user to login page
-        }
-    });
-});
-
-app.put('/locations/add', (req, res) => { // Register a bicycle location in DB
-    // Parse parameters from PUT request
-    let bicycle_id = parseInt(req.body.bicycle_id);
-    let gateway_id = parseInt(req.body.gateway_id);
-    let longitude = parseFloat(req.body.longitude);
-    let latitude = parseFloat(req.body.latitude);
-    let timestamp = req.body.timestamp;
-    let battery = parseInt(req.body.battery);
-    let sql;
-
+function addLocation(req, res, bicycle_id, gateway_id, longitude, latitude, timestamp, battery) { // Handles info packets
     // Check if all parameters have been sent
     if (bicycle_id && gateway_id && longitude && latitude && timestamp) {
         // Insert paramters into DB
-
-        sql = 'SELECT bicycles.bicycle_id FROM bicycles WHERE bicycles.bicycle_id = ?';
+        let sql = 'SELECT bicycles.bicycle_id FROM bicycles WHERE bicycles.bicycle_id = ?';
         query(sql, [bicycle_id]).then((results) => {
             if (results.length <= 0) {
                 sql = 'INSERT INTO bicycles (status, bicycle_id) VALUES (0, ?)';
@@ -193,31 +299,12 @@ app.put('/locations/add', (req, res) => { // Register a bicycle location in DB
                 res.end();
             });
         });
+    } else {
+        res.send('Invalid request!');
     }
-});
+}
 
-app.get('/bicycles/get/all', (req, res) => { // Return a list of all bicycles
-    // Get all bicycles from DB
-    let sql = 'SELECT * FROM locations';
-    query(sql, []).then((results) => {
-        if (results.length > 0)
-            res.send(results);
-    });
-});
-
-app.get('/bicycles/get/free', (req, res) => { // Return list of available free bicycles
-    // Get all free bicycles from DB
-    let sql = 'SELECT * FROM bicycles as b INNER JOIN (SELECT * FROM (SELECT DISTINCT * FROM locations as e order by timestamp desc) as l group by bicycle_id) as y ON b.bicycle_id = y.bicycle_id AND b.status = 0 AND y.battery > 30';
-    query(sql, []).then((results) => {
-        if (results.length > 0) 
-            res.send(results);
-    });
-});
-
-app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
-    // Parse parameters from request
-    let bicycle_id = parseInt(req.body.bicycle_id);
-    let gateway_id = parseInt(req.body.gateway_id);
+function update(req, res, bicycle_id, gateway_id) { // Handles request generated by physical button pressess
     let found = false;
     let sql;
 
@@ -252,13 +339,9 @@ app.post('/bicycles/update', (req, res) => { // Bicycle button press; second
     } else {
         res.send("Invalid request"); // Send invalid request aknowledgement
     }
-});
+}
 
-app.post('/bicycles/rent', (req, res) => { // Website button; first
-    // Parse request parameters
-    let bicycle_id = parseInt(req.body.bicycle_id); 
-    let gateway_id = parseInt(req.body.gateway_id); 
-
+function rent(req, res, bicycle_id, gateway_id) { // Handles infowindow button press
     // Create bicycle object
     let pending = {
         bicycle_id: bicycle_id,
@@ -285,30 +368,15 @@ app.post('/bicycles/rent', (req, res) => { // Website button; first
         } catch (error) {
             console.log("Pending bicycle expired or rented."); // Send error acknowledgement
         }
-    }, 10000);
+    }, timeoutDelay);
 
     timeouts.push(timeout); // Add timeout to timeouts list
     res.end();
-});
+}
 
-app.get('/user/status', (req, res) => { // Get user's status
-    let response = { // Create response JSON object
-        bicycle_id: req.session.bicycle_id, // Bicycle_id
-        gateway_id: req.session.gateway_id, // Gateway_id
-        status: req.session.status // Status of user
-    };
-
-    res.send(response); // Send JSON response
-});
-
-app.post('/bicycles/letgo', (req, res) => { // Let go of rented bicycle
+function letGo(req, res, username, email, id, timestamp, bicycle_id) {
     let sql; // Create sql query string
-    let username = req.session.username; // Extract username 
-    let email = req.session.email; // Extract email
-    let id = req.session.userID; // Extract user id
-    let timestamp = req.session.timestamp; // Extrat time of renting
     let biggestTripId = 0; // Initialize bigest trip number id
-    let bicycle_id = req.session.bicycle_id; // Extract rented bicycle id
     let values = []; // All location from new trip
 
     // Set rented bicycle's status to vacant
@@ -353,47 +421,4 @@ app.post('/bicycles/letgo', (req, res) => { // Let go of rented bicycle
     req.session.status = 0; // Set user's status to free
 
     res.end(); // End HTTPS response
-});
-
-app.get('/user/trips/all', (req, res) => { // Get all trips for user
-    let sql = 'SELECT * FROM trips WHERE userID = ?';
-    query(sql, [req.session.userID]).then((results) => {
-        res.send(results);
-    });
-});
-
-https.createServer({ // Create HTTPS server 
-    key: fs.readFileSync('server.key'), // Read SSL key
-    cert: fs.readFileSync('server.cert') // READ SSL certificate
-}, app).listen(443, () => { // Set app to listen ot port 443 for HTTPS
-    console.log('Listening...');
-});
-
-function query(sql, args) { // MySQL DB query Promise
-    return new Promise((resolve, reject) => { // Create new promise
-        connection.query(sql, args, (error, results) => { // Execute query
-            if (error) {
-                return reject(error);
-            }
-            resolve(results);
-        });
-    });
-}
-
-function checkUsername(username) {
-    let re = /^(?=.{4,20}$)[a-zA-Z0-9]/;
-
-    return re.test(username);     
-}
-
-function checkPassword(password) {
-    let re = /^(?=.*[a-z])(?=.{8,})/
-
-    return re.test(password);
-}
-
-function checkEmail(email) {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    
-    return re.test(String(email).toLowerCase());
 }
