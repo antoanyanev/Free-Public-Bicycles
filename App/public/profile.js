@@ -22,6 +22,7 @@ $(document).ready(() => { // Wait for page to load
         bicycleID = data.bicycle_id;
         gatewayID = data.gateway_id;
         status = data.status;
+        console.log(status);
 
         if (status) { // Chech if user has rented a bicycle
             $("#bicycleLetGo").append('<button id="letgo" onClick="bicycleLetGo()">Let go of bicycle</button>'); // Add button for letting go of bicycle

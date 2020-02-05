@@ -7,11 +7,15 @@ const app = express(); // Create express app
 const https = require('https'); // Require https to create a secureconnection
 const fs = require('fs'); // Require filestream to read 
 const passwordHash = require('password-hash');
+const axios = require('axios');
 
 let pendingBicycles = []; // List of pending rents
 let timeouts = []; // List of timeout objects for renting
+let rentTimeouts = [];
 
-const timeoutDelay = 10000;
+const timeoutDelay = 10e3;
+const rentTimeoutDelay = 864e5;
+const R = 6371e3;
 
 var connection = mysql.createConnection({ // Create a connection to SQL database
 	host     : 'localhost',
@@ -203,19 +207,19 @@ function query(sql, args) { // MySQL DB query Promise
     });
 }
 
-function checkUsername(username) {
+function checkUsername(username) { // Checks username validity
     let re = /^(?=.{4,20}$)[a-zA-Z0-9]/;
 
     return re.test(username);     
 }
 
-function checkPassword(password) {
+function checkPassword(password) { // Check password validity
     let re = /^(?=.*[a-z])(?=.{8,})/
 
     return re.test(password);
 }
 
-function checkEmail(email) {
+function checkEmail(email) { // Check email validity
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     
     return re.test(String(email).toLowerCase());
@@ -310,7 +314,7 @@ function update(req, res, bicycle_id, gateway_id) { // Handles request generated
 
     // Check all bicycles with pending status
     for (let i = 0; i < pendingBicycles.length; i++) {
-        if (pendingBicycles[i].bicycle_id == bicycle_id && !pendingBicycles[i].click) { // Search for request bike 
+        if (pendingBicycles[i].bicycle_id == bicycle_id && !pendingBicycles[i].click) { // Search for requested bike 
             let bicycle = pendingBicycles[i];
             pendingBicycles.splice(i, 1); // Remove bicycle from pending list
             timeouts.splice(i, 1); // Remove bicycle from timeouts list
@@ -335,6 +339,8 @@ function update(req, res, bicycle_id, gateway_id) { // Handles request generated
         req.session.gateway_id = gateway_id;
         req.session.status = true;
         req.session.timestamp = (new Date()).toISOString().slice(0, 19).replace(/-/g, "/").replace("T", " ");
+        // Set self check timeout
+        rentTimeout(req, res, bicycle_id, req.session.timestamp);
         res.send(response); // Send JSON response
     } else {
         res.send("Invalid request"); // Send invalid request aknowledgement
@@ -374,7 +380,7 @@ function rent(req, res, bicycle_id, gateway_id) { // Handles infowindow button p
     res.end();
 }
 
-function letGo(req, res, username, email, id, timestamp, bicycle_id) {
+function letGo(req, res, username, email, id, timestamp, bicycle_id) { // Handles let go button
     let sql; // Create sql query string
     let biggestTripId = 0; // Initialize bigest trip number id
     let values = []; // All location from new trip
@@ -409,7 +415,7 @@ function letGo(req, res, username, email, id, timestamp, bicycle_id) {
 
                 // Insert values into trip
                 sql = 'INSERT INTO trips (id, locationID, userID, bicycle_id) VALUES ?';
-                query(sql, [values]).then((results) => {
+                query(sql, [values]).then(() => {
 
                 });
             });
@@ -422,3 +428,48 @@ function letGo(req, res, username, email, id, timestamp, bicycle_id) {
 
     res.end(); // End HTTPS response
 }
+
+function rentTimeout(req, res, bicycle_id, timestamp) { // Checks if the bicycle has been active after a period of time
+    let minDistance = 30; // Minimum allowed traveled distance
+    let sql; // SQL query
+
+    timeout = setTimeout(() => { // Set check after a given interval
+        sql = 'SELECT * FROM locations WHERE bicycle_id = ? and timestamp > ?';
+        query(sql, [bicycle_id, timestamp]).then((results) => {
+            console.log(results);
+
+            for (let i = 0; i < results.length - 1; i++) {
+                let distance = calculateDistance(results[i].latitude, results[i].longitude, results[i + 1].latitude, results[i + 1].longitude); // Calculate distance between two points
+                if (distance < minDistance) { // Check distance
+                   sql = 'UPDATE bicycles SET status = 0 WHERE bicycle_id = ?'; // Set bicycle as free
+                   query(sql, [bicycle_id]).then((results) => { });      
+                   
+                   req.session.bicycle_id = null;
+                   req.session.gateway_id = null;
+                   req.session.status = 0;
+                }
+            }
+        });
+    }, rentTimeoutDelay); // use renttimeoutDelay as delay interval
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) { // Calculates distance between two latlong pairs
+    let p1 = toRadians(lat1);
+    let p2 = toRadians(lat2);
+    let deltap = toRadians(lat2 - lat1);
+    let deltal = toRadians(lon2 - lon1);
+
+    let a = Math.sin(deltap / 2) * Math.sin(deltap / 2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(deltal / 2) * Math.sin(deltap / 2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    let d = R * c;
+    
+    return d; 
+}
+
+function toRadians(degrees) { // Converts degrees to radians
+    let pi = Math.PI;
+    return degrees * (pi / 180);
+} 
