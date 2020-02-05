@@ -5,8 +5,8 @@
 #include <EEPROM.h> // Include EEPROM library
 #include <Sleep_n0m1.h> // Include power management library
 
-#define RXPIN 9 // Software serial interface RX pin
-#define TXPIN 8 // Software serial interface TX pin
+#define RXPIN 8 // Software serial interface RX pin
+#define TXPIN 9 // Software serial interface TX pin
 #define NSS 10 // LoRa module Chip Select pin
 #define RESET 7 // LoRa module Reset pin
 #define DIO0 2 // LoRa module DIO0 pin
@@ -113,7 +113,11 @@ void get_info() { // Extract GPS info
         Serial.println(hdop_value);
 
         // Check minimum hdop value and last info
-        if (hdop_value < HDOPMIN && (!are_equal(_latitude, last_latidude, 16, 16) || !are_equal(_longitude, last_longitude, 16, 16))) {
+//        if (hdop_value < HDOPMIN && (!are_equal(_latitude, last_latidude, 16, 16) || !are_equal(_longitude, last_longitude, 16, 16))) {
+//            info = 1; // Used in gps_read_info()
+//        }
+
+        if (hdop_value < HDOPMIN) {
             info = 1; // Used in gps_read_info()
         }
     }
