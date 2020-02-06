@@ -5,8 +5,8 @@
 #include <EEPROM.h> // Include EEPROM library
 #include <Sleep_n0m1.h> // Include power management library
 
-#define RXPIN 8 // Software serial interface RX pin
-#define TXPIN 9 // Software serial interface TX pin
+#define RXPIN 9 // Software serial interface RX pin
+#define TXPIN 8 // Software serial interface TX pin
 #define NSS 10 // LoRa module Chip Select pin
 #define RESET 5 // LoRa module Reset pin
 #define DIO0 2 // LoRa module DIO0 pin
@@ -14,7 +14,8 @@
 #define WAKEPIN 3 // Button pin
 #define BATTPIN A3 // Batter percentage measurement pin
 #define BAND 868E6 // LoRa module operating frequency
-#define HDOPMIN 10000 // Minimum LoRa location information accuracy
+#define HDOPMIN 200 // Minimum LoRa location information accuracy
+#define BATTERYMIN 30 // Minimum battery operating percentage
 
 TinyGPSPlus gps; // GPS library initialization
 SoftwareSerial gpsSerial(RXPIN, TXPIN); // Software serial interface initialization
@@ -23,7 +24,6 @@ Sleep sleep; // Power management library initialization
 int id; // ID of the bicycle
 int hdop_value = 10000; // Current horizontal dimmunition of position 
 int info = 0; // Allows transmission of data
-int battery;
 
 boolean sleeping = true; // Power state 
 boolean abort_cycle; // Aborts sleeping cycle when set to false
@@ -47,6 +47,7 @@ int get_battery_percentage(); // Calculates battery level
 double my_map(double x, double in_min, double in_max, double out_min, double out_max); // Modified arduino map function to work with floating point numbers
 
 unsigned long sleep_time; // How the arduino sleeps
+int battery;
 
 void setup() {
     // Set pin modes
@@ -77,21 +78,15 @@ void setup() {
 }
 
 void loop() {
-    delay(100); // Wait for serial printing to finsh
-    sleeping = false; // Set sleeping state to awake
-    Serial.println("Waiting for GPS Info");  // Wait for GPS info
-    
-    control(); // Run main logic
-    
-    // Set controller to sleeping state
-    Serial.print("sleeping for ");
-    Serial.println(sleep_time); 
-    delay(100);
-    
-    sleeping = false;
-
-    sleep.pwrDownMode(); // Set sleep mode
-    sleep.sleepDelay(sleep_time, abort_cycle); // Sleep for: sleep_time 
+    battery = get_battery_percentage(); // Get battery percentage
+    if (battery < BATTERYMIN) { // Check if battery level is high enough to continue operating
+        detachInterrupt(digitalPinToInterrupt(WAKEPIN)); // Detach button press interrupt
+        digitalWrite(GPSCTRLPIN, LOW); // Turn off GPS
+        LoRa.end();  // Turn off LoRa
+        sleep.pwrDownMode(); // Turn of microcontroller
+    } else {
+        control(); // Run main logic
+    }
 }
 
 void send_info() { // Send data packet
@@ -113,11 +108,7 @@ void get_info() { // Extract GPS info
         Serial.println(hdop_value);
 
         // Check minimum hdop value and last info
-//        if (hdop_value < HDOPMIN && (!are_equal(_latitude, last_latidude, 16, 16) || !are_equal(_longitude, last_longitude, 16, 16))) {
-//            info = 1; // Used in gps_read_info()
-//        }
-
-        if (hdop_value < HDOPMIN) {
+        if (hdop_value < HDOPMIN && (!are_equal(_latitude, last_latidude, 16, 16) || !are_equal(_longitude, last_longitude, 16, 16))) {
             info = 1; // Used in gps_read_info()
         }
     }
@@ -139,7 +130,8 @@ void gps_read_info() { // Read GPS info
 }
 
 void create_info_packet() { // Create data packet
-    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, get_battery_percentage());
+    battery = get_battery_percentage();
+    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, battery);
 }
 
 void create_button_packet() { // Create button packet
@@ -152,30 +144,33 @@ void button_click() { // Button press ISR
     unsigned long interrupt_time = millis(); // Time of current interrupt
 
     if (interrupt_time - last_interrupt_time > 200) { // Check interrupt interval
-            if (sleeping) { // Checks controller state
-                abort_cycle = true; // Break sleep cycle
-            }
-  
-            LoRa.begin(BAND);
-            delay(10);
-            create_button_packet(); // Create button press packet
-            // Send button packet
-            LoRa.beginPacket();
-            LoRa.print(_packet);
-            LoRa.endPacket();
-            delay(10);
-            LoRa.end();
-          
-            if (sleeping) { // Check controller state
-                abort_cycle = false; // Reset sleep state
-            }
+        if (sleeping) { // Checks controller state
+            abort_cycle = true; // Break sleep cycle
+        }
+
+        LoRa.begin(BAND);
+        delay(10);
+        create_button_packet(); // Create button press packet
+        // Send button packet
+        LoRa.beginPacket();
+        LoRa.print(_packet);
+        LoRa.endPacket();
+        delay(10);
+        LoRa.end();
+      
+        if (sleeping) { // Check controller state
+            abort_cycle = false; // Reset sleep state
+        }
     }
     
     last_interrupt_time = interrupt_time; // Set last interrupt time 
 }
 
 void control() { // Main control logic
-    // LoRa.end(); // Turn off LoRa
+    delay(100); // Wait for serial printing to finsh
+    sleeping = false; // Set sleeping state to awake
+    Serial.println("Waiting for GPS Info");  // Wait for GPS info
+  
     digitalWrite(GPSCTRLPIN, HIGH); // Turn on GPS
     delay(20);
     
@@ -196,6 +191,16 @@ void control() { // Main control logic
     // Set last position info
     strncpy(last_latidude, _latitude, 16);
     strncpy(last_longitude, _longitude, 16);
+
+    // Set controller to sleeping state
+    Serial.print("sleeping for ");
+    Serial.println(sleep_time); 
+    delay(100);
+    
+    sleeping = false;
+
+    sleep.pwrDownMode(); // Set sleep mode
+    sleep.sleepDelay(sleep_time, abort_cycle); // Sleep for: sleep_time 
 }
 
 int are_equal(char arr1[], char arr2[], int n, int m) { // Check if to char arrays are the same
