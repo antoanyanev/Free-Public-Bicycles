@@ -566,7 +566,7 @@ U 1 1 5E3EA4DC
 P 7550 4050
 F 0 "J8" V 7488 3862 50  0000 R CNN
 F 1 "Conn_01x02_Female" V 7397 3862 50  0000 R CNN
-F 2 "Connector_Molex:Molex_PicoBlade_53047-0210_1x02_P1.25mm_Vertical" H 7550 4050 50  0001 C CNN
+F 2 "Connector_Molex:Molex_KK-254_AE-6410-02A_1x02_P2.54mm_Vertical" H 7550 4050 50  0001 C CNN
 F 3 "~" H 7550 4050 50  0001 C CNN
 	1    7550 4050
 	0    -1   -1   0   
@@ -1027,8 +1027,6 @@ Connection ~ 4850 1250
 Connection ~ 4850 1650
 Connection ~ 6000 1250
 Connection ~ 6000 1650
-Wire Wire Line
-	7700 1650 8400 1650
 Connection ~ 8400 1650
 Wire Wire Line
 	8400 1650 8900 1650
@@ -1045,8 +1043,6 @@ F 3 "~" H 8400 1050 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	8400 1250 8400 1650
-Wire Wire Line
-	7700 1250 8300 1250
 Wire Wire Line
 	8500 1250 8900 1250
 NoConn ~ 2850 6650
@@ -1269,14 +1265,10 @@ Text GLabel 2650 4550 0    50   Input ~ 0
 UART_TX
 Wire Wire Line
 	2850 4550 2650 4550
-Text GLabel 1800 2600 2    50   Input ~ 0
+Text GLabel 1850 2600 2    50   Input ~ 0
 UART_RX
-Wire Wire Line
-	1600 2600 1650 2600
-Text GLabel 1800 2500 2    50   Input ~ 0
+Text GLabel 1850 2500 2    50   Input ~ 0
 UART_TX
-Wire Wire Line
-	1600 2500 1650 2500
 $Comp
 L Device:R R5
 U 1 1 5E3486A5
@@ -1318,19 +1310,8 @@ F 3 "" H 9350 3100 50  0001 C CNN
 	1    9350 3100
 	1    0    0    -1  
 $EndComp
-$Comp
-L Connector:Conn_01x03_Female J13
-U 1 1 5E44D686
-P 1450 2600
-F 0 "J13" H 1344 2275 50  0000 C CNN
-F 1 "Conn_01x03_Female" H 1344 2366 50  0000 C CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical" H 1450 2600 50  0001 C CNN
-F 3 "~" H 1450 2600 50  0001 C CNN
-	1    1450 2600
-	-1   0    0    1   
-$EndComp
 Text GLabel 2800 4300 1    50   Input ~ 0
-RESET
+RST
 Wire Wire Line
 	2800 4350 2800 4300
 Connection ~ 2800 4350
@@ -1339,11 +1320,37 @@ Wire Wire Line
 Wire Wire Line
 	1650 2700 1850 2700
 Text GLabel 1850 2700 2    50   Input ~ 0
-RESET
-Connection ~ 1650 2500
+RST
 Wire Wire Line
-	1650 2500 1800 2500
-Connection ~ 1650 2600
+	1650 2500 1850 2500
 Wire Wire Line
-	1650 2600 1800 2600
+	1650 2600 1850 2600
+Wire Wire Line
+	7700 1650 8400 1650
+Wire Wire Line
+	7700 1250 8300 1250
+$Comp
+L Connector:Conn_01x04_Female J13
+U 1 1 5E4E3087
+P 1450 2600
+F 0 "J13" H 1344 2175 50  0000 C CNN
+F 1 "Conn_01x04_Female" H 1344 2266 50  0000 C CNN
+F 2 "" H 1450 2600 50  0001 C CNN
+F 3 "~" H 1450 2600 50  0001 C CNN
+	1    1450 2600
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1650 2400 2300 2400
+$Comp
+L power:GND #PWR0102
+U 1 1 5E4FFF60
+P 2300 2400
+F 0 "#PWR0102" H 2300 2150 50  0001 C CNN
+F 1 "GND" H 2305 2227 50  0000 C CNN
+F 2 "" H 2300 2400 50  0001 C CNN
+F 3 "" H 2300 2400 50  0001 C CNN
+	1    2300 2400
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

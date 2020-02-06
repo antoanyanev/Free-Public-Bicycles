@@ -8,7 +8,7 @@
 #define RXPIN 8 // Software serial interface RX pin
 #define TXPIN 9 // Software serial interface TX pin
 #define NSS 10 // LoRa module Chip Select pin
-#define RESET 7 // LoRa module Reset pin
+#define RESET 5 // LoRa module Reset pin
 #define DIO0 2 // LoRa module DIO0 pin
 #define GPSCTRLPIN A5 // GPS power enable pin
 #define WAKEPIN 3 // Button pin
@@ -55,7 +55,7 @@ void setup() {
     digitalWrite(GPSCTRLPIN, HIGH);
   
     // Set sleep interval
-    sleep_time = 300000;
+    sleep_time = 30000;
 
     // Begin serial interfaces
     Serial.begin(9600);
@@ -139,7 +139,7 @@ void gps_read_info() { // Read GPS info
 }
 
 void create_info_packet() { // Create data packet
-    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, 80);
+    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, get_battery_percentage());
 }
 
 void create_button_packet() { // Create button packet
