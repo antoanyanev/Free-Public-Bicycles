@@ -2,4 +2,5 @@
   (lib (name sockets)(type KiCad)(uri ${KIPRJMOD}/sockets)(options "")(descr ""))
   (lib (name Library)(type KiCad)(uri ${KIPRJMOD}/Library.pretty)(options "")(descr ""))
   (lib (name Desktop)(type KiCad)(uri C:/Users/Toni/Desktop)(options "")(descr ""))
+  (lib (name MyComponents)(type KiCad)(uri ${KIPRJMOD}/MyComponents.pretty)(options "")(descr ""))
 )

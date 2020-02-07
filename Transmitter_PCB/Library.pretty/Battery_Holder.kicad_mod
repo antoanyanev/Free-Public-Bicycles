@@ -1,4 +1,4 @@
-(module Battery_Holder (layer F.Cu) (tedit 5E31C853)
+(module Battery_Holder (layer F.Cu) (tedit 5E3D4AE4)
   (fp_text reference REF** (at 0 0.5) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
@@ -21,4 +21,9 @@
   (fp_line (start 0 21.59) (end 0 0) (layer F.CrtYd) (width 0.15))
   (pad 1 thru_hole circle (at 1.8 10.5) (size 3 3) (drill 2) (layers *.Cu *.Mask))
   (pad 2 thru_hole circle (at 73.2 10.5) (size 3 3) (drill 2) (layers *.Cu *.Mask))
+  (model "${KIPRJMOD}/18650 Single Cell Holder.STEP"
+    (offset (xyz 37.5 -10.6 0))
+    (scale (xyz 1 1 1))
+    (rotate (xyz -90 0 0))
+  )
 )
