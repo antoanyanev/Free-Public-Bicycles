@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:PCB-cache
-EELAYER 29 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -1330,7 +1330,7 @@ U 1 1 5E496E7A
 P 8200 3000
 F 0 "U3" H 7750 3700 50  0000 C CNN
 F 1 "RFM95W-868S2" H 7800 3600 50  0000 C CNN
-F 2 "RF_Module:HOPERF_RFM9XW_THT" H 4900 4650 50  0001 C CNN
+F 2 "MyComponents:RFM95W_THT" H 4900 4650 50  0001 C CNN
 F 3 "https://www.hoperf.com/data/upload/portal/20181127/5bfcbea20e9ef.pdf" H 4900 4650 50  0001 C CNN
 	1    8200 3000
 	1    0    0    -1  
@@ -1355,4 +1355,15 @@ NoConn ~ 8700 3200
 NoConn ~ 8700 3100
 NoConn ~ 8700 3000
 NoConn ~ 8700 2900
+$Comp
+L Connector:Conn_01x03_Female J?
+U 1 1 5E40F892
+P 10200 2250
+F 0 "J?" H 10227 2276 50  0000 L CNN
+F 1 "Conn_01x03_Female" H 10227 2185 50  0000 L CNN
+F 2 "" H 10200 2250 50  0001 C CNN
+F 3 "~" H 10200 2250 50  0001 C CNN
+	1    10200 2250
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

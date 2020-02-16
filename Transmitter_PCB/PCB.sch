@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:PCB-cache
-EELAYER 29 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -1355,4 +1355,15 @@ NoConn ~ 8700 3200
 NoConn ~ 8700 3100
 NoConn ~ 8700 3000
 NoConn ~ 8700 2900
+$Comp
+L Connector:Conn_01x03_Female J3
+U 1 1 5E40F892
+P 10200 2250
+F 0 "J3" H 10227 2276 50  0000 L CNN
+F 1 "Conn_01x03_Female" H 10227 2185 50  0000 L CNN
+F 2 "" H 10200 2250 50  0001 C CNN
+F 3 "~" H 10200 2250 50  0001 C CNN
+	1    10200 2250
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
