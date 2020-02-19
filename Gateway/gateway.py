@@ -3,8 +3,9 @@ import time # Import time library
 import requests # Import HTTP requests library
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from datetime import datetime # Import date and time library
-import re
+import re # Import regular expressions library
 
+# Disable warning for HTTP requests using SSL
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 global gateway_id # Create the id of the current gateway 
@@ -47,19 +48,24 @@ def handle_packet(packet): # Main packet handling
 
     print 'Packet received: {}'.format(packet)
 
-PyLora.init() # Initialize LoRa module
-PyLora.set_frequency(868000000) # Set the operating frequency of the LoRa module
-PyLora.enable_crc() # Enable CRC on the LoRa module
+def setup(): # Execute initial cofnfiguration
+    PyLora.init() # Initialize LoRa module
+    PyLora.set_frequency(868000000) # Set the operating frequency of the LoRa module
+    PyLora.enable_crc() # Enable CRC on the LoRa module
+    print("Gateway listening...")
 
-print("Gateway listening...")
 
-while True:
-    PyLora.receive() # Listen for incoming packets
-    while not PyLora.packet_available():
-        time.sleep(0)
-    rec = PyLora.receive_packet() # Read incoming packets
-    try:
-        if (validate_packet(rec)):
-            handle_packet(rec)
-    except:
-        print 'Invalid packet'
+def main(): # Execute main logic 
+    while True:
+        PyLora.receive() # Listen for incoming packets
+        while not PyLora.packet_available():
+            time.sleep(0)
+        rec = PyLora.receive_packet() # Read incoming packets
+        try:
+            if (validate_packet(rec)):
+                handle_packet(rec)
+        except:
+            print 'Invalid packet'
+
+setup() # Execute setup method
+main() # Execute main method
