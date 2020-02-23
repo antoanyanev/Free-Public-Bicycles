@@ -5,8 +5,8 @@
 #include <EEPROM.h> // Include EEPROM library
 #include <Sleep_n0m1.h> // Include power management library
 
-#define RXPIN 9 // Software serial interface RX pin
-#define TXPIN 8 // Software serial interface TX pin
+#define RXPIN 8 // Software serial interface RX pin
+#define TXPIN 9 // Software serial interface TX pin
 #define NSS 10 // LoRa module Chip Select pin
 #define RESET 5 // LoRa module Reset pin
 #define DIO0 2 // LoRa module DIO0 pin
@@ -15,7 +15,8 @@
 #define BATTPIN A3 // Batter percentage measurement pin
 #define BAND 868E6 // LoRa module operating frequency
 #define HDOPMIN 200 // Minimum LoRa location information accuracy
-#define BATTERYMIN 30 // Minimum battery operating percentage
+#define BATTERYTURNOFF 10 // Minimum battery operating percentage
+#define BATTERYTURNON 15;
 
 TinyGPSPlus gps; // GPS library initialization
 SoftwareSerial gpsSerial(RXPIN, TXPIN); // Software serial interface initialization
@@ -40,23 +41,28 @@ void get_info(); // Handles GPS data
 void send_info(); // Sends data packet
 void create_info_packet(); // Creates location packet
 void create_button_packet(); // Creates button packet
-void button_interrupt(); // Handles button press interrupt
+void button_click(); // Handles button press interrupt
 void control(); // Main logic
+void low_power(); // Low battery logic
 int are_equal(char arr1[], char arr2[], int n, int m); // Cheks if two char arrays are the same
 int get_battery_percentage(); // Calculates battery level
 double my_map(double x, double in_min, double in_max, double out_min, double out_max); // Modified arduino map function to work with floating point numbers
 
-unsigned long sleep_time; // How the arduino sleeps
+unsigned long normal_sleep_time; // Arduino sleep interval in normal mode of operation
+unsigned long low_power_sleep_time; // Arduino sleep interval in low power mode of operation
 int battery;
 
 void setup() {
+    CLKPR |= (1 << 7); // Enable clock prescaler
+
     // Set pin modes
     pinMode(WAKEPIN, INPUT_PULLUP);
     pinMode(GPSCTRLPIN, OUTPUT);
     digitalWrite(GPSCTRLPIN, HIGH);
   
     // Set sleep interval
-    sleep_time = 30000;
+    normal_sleep_time = 3600000;
+    low_power_sleep_time = 300000;
 
     // Begin serial interfaces
     Serial.begin(9600);
@@ -79,13 +85,12 @@ void setup() {
 
 void loop() {
     battery = get_battery_percentage(); // Get battery percentage
-    if (battery < BATTERYMIN) { // Check if battery level is high enough to continue operating
-        detachInterrupt(digitalPinToInterrupt(WAKEPIN)); // Detach button press interrupt
-        digitalWrite(GPSCTRLPIN, LOW); // Turn off GPS
-        LoRa.end();  // Turn off LoRa
-        sleep.pwrDownMode(); // Turn of microcontroller
+    if (battery < BATTERYTURNOFF) {
+      // Execute low power function
+      low_power();
     } else {
-        control(); // Run main logic
+      // Execute control function
+      control();
     }
 }
 
@@ -167,6 +172,7 @@ void button_click() { // Button press ISR
 }
 
 void control() { // Main control logic
+    CLKPR &= 11111011; // Set clock prescaler to 1
     delay(100); // Wait for serial printing to finsh
     sleeping = false; // Set sleeping state to awake
     Serial.println("Waiting for GPS Info");  // Wait for GPS info
@@ -183,9 +189,7 @@ void control() { // Main control logic
     delay(20);
     
     LoRa.begin(BAND); // Turn on LoRa
-    
     send_info(); // Send data
-    
     LoRa.end(); // Turn off LoRa
     
     // Set last position info
@@ -194,14 +198,31 @@ void control() { // Main control logic
 
     // Set controller to sleeping state
     Serial.print("sleeping for ");
-    Serial.println(sleep_time); 
+    Serial.println(normal_sleep_time); 
     delay(100);
     
     sleeping = false;
 
     sleep.pwrDownMode(); // Set sleep mode
-    sleep.sleepDelay(sleep_time, abort_cycle); // Sleep for: sleep_time 
+    sleep.sleepDelay(normal_sleep_time, abort_cycle); // Sleep for: sleep_time 
 }
+
+void low_power() {
+    Serial.println("Entering low power mode...");
+  
+    CLKPR |= (1 << 2); // Set clock prescaler to 16
+    detachInterrupt(digitalPinToInterrupt(WAKEPIN)); // Detach button press interrupt
+    digitalWrite(GPSCTRLPIN, LOW); // Turn off GPS
+    LoRa.end();  // Turn off LoRa
+
+    battery = get_battery_percentage();
+    while (battery < BATTERYTURNOFF) {
+        battery = get_battery_percentage();
+        sleep.pwrDownMode(); // Set sleep mode
+        sleep.sleepDelay(low_power, abort_cycle); // Sleep for: sleep_time
+    }
+}
+
 
 int are_equal(char arr1[], char arr2[], int n, int m) { // Check if to char arrays are the same
     for (int i = 0; i < n; i++) {
