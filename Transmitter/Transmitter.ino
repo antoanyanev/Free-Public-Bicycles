@@ -136,11 +136,11 @@ void gps_read_info() { // Read GPS info
 
 void create_info_packet() { // Create data packet
     battery = get_battery_percentage();
-    sprintf(_packet, "%d, %s, %s, %d", id, _latitude, _longitude, battery);
+    sprintf(_packet, "g, %d, %s, %s, %d", id, _latitude, _longitude, battery);
 }
 
 void create_button_packet() { // Create button packet
-    sprintf(_packet, "%d, button", id);
+    sprintf(_packet, "b, %d", id);
 }
 
 void button_click() { // Button press ISR

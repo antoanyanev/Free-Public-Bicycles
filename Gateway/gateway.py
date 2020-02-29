@@ -11,31 +11,41 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 global gateway_id # Create the id of the current gateway 
 gateway_id = 101 # Set the id of the gateway
 
-def check_packet(packet): # Checks if the received LoRa packet is button click
-    return "button" in packet # Check if the packet containts button message
+# Checks if the received LoRa packet is button click
+def check_packet(packet): 
+    # Check if the packet containts button message
+    return "b" in packet 
 
-def validate_packet(packet): # cheks if packet is valid 
-    rx = "^[a-zA-Z0-9., ]" # Allowed symbols: a-z, A-Z, 0-9, ',', '.'
+# Checks if packet is valid 
+def validate_packet(packet): 
+    # Allowed symbols: a-z, A-Z, 0-9, ',', '.'
+    rx = "^[a-zA-Z0-9., ]" 
     return True if re.search(rx, packet) else False
 
-def handle_packet(packet): # Main packet handling
+# Main packet handling
+def handle_packet(packet): 
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S'); # Get time of reception
     print now
     info = packet.split(',') # Separate message
     bicycle_id = info[0].strip().decode('utf-8') # Get the bicycle_id
 
-    if (check_packet(packet)): # Check if the message is a button message
-        PyLora.send_packet('{}, button_ack'.format(bicycle_id)) # Reply with acknowldgement
-        req = requests.post('https://www.freepublicbicycles.org/bicycles/rent', verify = False, json = { # Make a rent request to the FreePublicBicycles API
+    # Check if the message is a button message
+    if (check_packet(packet)): 
+        # Make a rent request to the FreePublicBicycles API
+        rentURL = 'https://www.freepublicbicycles.org/bicycles/rent'
+        req = requests.post(rentURL, verify = False, json = { 
             "bicycle_id": bicycle_id, # Set data for the reuest
             "gateway_id": gateway_id
         })
     else:
         try:
-            latitude = info[1].strip().decode('utf-8') # Extract position info from packet
+            # Extract position info from packet
+            latitude = info[1].strip().decode('utf-8') 
             longitude = info[2].strip().decode('utf-8')
             battery = info[3].strip().decode('utf-8')
-            req = requests.put('https://www.freepublicbicycles.org/locations/add', verify = False, json = { # Make a request to the API to update the bicycle's info
+            # Make a request to the API to update the bicycle's info
+            locationsURL = 'https://www.freepublicbicycles.org/locations/add'
+            req = requests.put(locationsURL, verify = False, json = { 
                 "bicycle_id": bicycle_id, # Set data for the request
                 "gateway_id": gateway_id,
                 "latitude": latitude,
@@ -48,19 +58,25 @@ def handle_packet(packet): # Main packet handling
 
     print 'Packet received: {}'.format(packet)
 
-def setup(): # Execute initial cofnfiguration
-    PyLora.init() # Initialize LoRa module
-    PyLora.set_frequency(868000000) # Set the operating frequency of the LoRa module
-    PyLora.enable_crc() # Enable CRC on the LoRa module
+# Execute initial cofnfiguration
+def setup(): 
+    # Initialize LoRa module
+    PyLora.init() 
+    # Set the operating frequency of the LoRa module
+    PyLora.set_frequency(868000000) 
+    # Enable CRC on the LoRa module
+    PyLora.enable_crc() 
     print("Gateway listening...")
 
-
-def main(): # Execute main logic 
+# Execute main logic
+def main():  
+    # Listen for incoming packets
     while True:
-        PyLora.receive() # Listen for incoming packets
+        PyLora.receive() 
         while not PyLora.packet_available():
             time.sleep(0)
-        rec = PyLora.receive_packet() # Read incoming packets
+        # Read incoming packets
+        rec = PyLora.receive_packet() 
         try:
             if (validate_packet(rec)):
                 handle_packet(rec)

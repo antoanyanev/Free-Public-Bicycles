@@ -36,7 +36,7 @@ $(document).ready(() => { // Wait for page to load
     });
 });
 
-function bicycleLetGo() { // Let go og bicycle
+function bicycleLetGo() { // Let go of bicycle
     $.post('https://www.freepublicbicycles.org/bicycles/letgo', {bicycle_id: bicycleID, gateway_id: gatewayID}, (data) => { // Send post request to API
         $("#letgo").remove(); // Remove bicycle let go button
         location.reload(); // Reload page
@@ -92,7 +92,7 @@ function createMarkers() { // Create start marker, end marker and trace in betwe
     });
 }
 
-function setTrips(data) { // Set HTML trips list items proeprties
+function setTrips(data) { // Set HTML trips list items properties
     let j = 0;
     for (let i = 0; i < data.length; i++) {
         if (id != data[i].id) {

@@ -7,7 +7,6 @@ const app = express(); // Create express app
 const https = require('https'); // Require https to create a secureconnection
 const fs = require('fs'); // Require filestream to read 
 const passwordHash = require('password-hash');
-const axios = require('axios');
 
 let pendingBicycles = []; // List of pending rents
 let timeouts = []; // List of timeout objects for renting
